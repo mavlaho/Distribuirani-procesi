@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/snapshots/RecvCamera.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> RecvCamera  <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Camera {
+    <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>final</b></font> <font color="#2e8b57"><b>int</b></font> white = <font color="#ff00ff">0</font>, red = <font color="#ff00ff">1</font>;
+    <font color="#2e8b57"><b>int</b></font> myColor = white;
+    <font color="#2e8b57"><b>boolean</b></font> closed[];
+    CamUser app;
+    LinkedList chan[] = <font color="#ff00ff">null</font>;
+    <font color="#2e8b57"><b>public</b></font> RecvCamera(Linker initComm, CamUser app) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        closed = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>boolean</b></font>[N];
+        chan = <font color="#a52a2a"><b>new</b></font> LinkedList[N];
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++)
+            <font color="#a52a2a"><b>if</b></font> (isNeighbor(i)) {
+                closed[i] = <font color="#ff00ff">false</font>;
+                chan[i] = <font color="#a52a2a"><b>new</b></font> LinkedList();
+            } <font color="#a52a2a"><b>else</b></font> closed[i] = <font color="#ff00ff">true</font>;
+        <font color="#2e8b57"><b>this</b></font>.app = app;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> globalState() {
+        myColor = red;
+        app.localState(); <font color="#0000ff">// record local State;</font>
+        sendToNeighbors(<font color="#ff00ff">&quot;marker&quot;</font>, myId);  <font color="#0000ff">// send Markers</font>
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;marker&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> (myColor == white) globalState();
+            closed[src] = <font color="#ff00ff">true</font>;
+            <font color="#a52a2a"><b>if</b></font> (isDone()){
+                System.out.println(<font color="#ff00ff">&quot;Channel State: Transit Messages &quot;</font>);
+                <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++)
+                    <font color="#a52a2a"><b>if</b></font> (isNeighbor(i))
+                        <font color="#a52a2a"><b>while</b></font> (!chan[i].isEmpty())
+                            System.out.println(
+                            ((Msg) chan[i].removeFirst()).toString());
+            }
+        } <font color="#a52a2a"><b>else</b></font> { <font color="#0000ff">// application message</font>
+            <font color="#a52a2a"><b>if</b></font> ((myColor == red) &amp;&amp; (!closed[src]))
+                chan[src].add(m);
+            app.handleMsg(m, src, tag); <font color="#0000ff">// give it to app</font>
+        }
+    }
+    <font color="#2e8b57"><b>boolean</b></font> isDone() {
+        <font color="#a52a2a"><b>if</b></font> (myColor == white) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++)
+            <font color="#a52a2a"><b>if</b></font> (!closed[i]) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">true</font>;
+    }
+}
+</pre>
+</body>
+</html>

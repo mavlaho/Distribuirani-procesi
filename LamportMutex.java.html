@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>~/bks/conc/dprogs/LamportMutex.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> LamportMutex <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Lock {
+    DirectClock v;
+    <font color="#2e8b57"><b>int</b></font>[] q; <font color="#0000ff">// request queue</font>
+    <font color="#2e8b57"><b>public</b></font> LamportMutex(Linker initComm) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        v = <font color="#a52a2a"><b>new</b></font> DirectClock(N, myId);
+        q = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>int</b></font>[N];
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> j = <font color="#ff00ff">0</font>; j &lt; N; j++)
+            q[j] = Symbols.Infinity;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> requestCS() {
+        v.tick();
+        q[myId] = v.getValue(myId);
+        broadcastMsg(<font color="#ff00ff">&quot;request&quot;</font>, q[myId]);
+        <font color="#a52a2a"><b>while</b></font> (!okayCS())
+            myWait();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> releaseCS() {
+        q[myId] = Symbols.Infinity;
+        broadcastMsg(<font color="#ff00ff">&quot;release&quot;</font>, v.getValue(myId));
+    }
+    <font color="#2e8b57"><b>boolean</b></font> okayCS() {
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> j = <font color="#ff00ff">0</font>; j &lt; N; j++){
+            <font color="#a52a2a"><b>if</b></font> (isGreater(q[myId], myId, q[j], j))
+                <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+            <font color="#a52a2a"><b>if</b></font> (isGreater(q[myId], myId, v.getValue(j), j))
+                <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        }
+        <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">true</font>;
+    }
+    <font color="#2e8b57"><b>boolean</b></font> isGreater(<font color="#2e8b57"><b>int</b></font> entry1, <font color="#2e8b57"><b>int</b></font> pid1, <font color="#2e8b57"><b>int</b></font> entry2, <font color="#2e8b57"><b>int</b></font> pid2) {
+        <font color="#a52a2a"><b>if</b></font> (entry2 == Symbols.Infinity) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>return</b></font> ((entry1 &gt; entry2)
+                || ((entry1 == entry2) &amp;&amp; (pid1 &gt; pid2)));
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#2e8b57"><b>int</b></font> timeStamp = m.getMessageInt();
+        v.receiveAction(src, timeStamp);
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;request&quot;</font>)) {
+            q[src] = timeStamp;
+            sendMsg(src, <font color="#ff00ff">&quot;ack&quot;</font>, v.getValue(myId));
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;release&quot;</font>))
+            q[src] = Symbols.Infinity;
+        notify(); <font color="#0000ff">// okayCS() may be true now</font>
+    }
+}
+</pre>
+</body>
+</html>

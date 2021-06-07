@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/consensus/TwoPhaseTester.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> TwoPhaseTester {
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>void</b></font> main(String[] args) <font color="#2e8b57"><b>throws</b></font> Exception {
+        String baseName = args[<font color="#ff00ff">0</font>];
+        <font color="#2e8b57"><b>int</b></font> myId = Integer.parseInt(args[<font color="#ff00ff">1</font>]);
+        <font color="#2e8b57"><b>int</b></font> numProc = Integer.parseInt(args[<font color="#ff00ff">2</font>]);
+        Linker comm = <font color="#a52a2a"><b>new</b></font> Linker(baseName, myId, numProc);
+        <font color="#a52a2a"><b>if</b></font> (myId == <font color="#ff00ff">0</font>) {
+            TwoPhaseCoord master = <font color="#a52a2a"><b>new</b></font> TwoPhaseCoord(comm);
+            <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; numProc; i++)
+                <font color="#a52a2a"><b>if</b></font> (i != myId)
+                    (<font color="#a52a2a"><b>new</b></font> ListenerThread(i, master)).start();
+            master.doCoordinator();
+        }
+        <font color="#a52a2a"><b>else</b></font> {
+            TwoPhaseParticipant slave = <font color="#a52a2a"><b>new</b></font> TwoPhaseParticipant(comm);
+            <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; numProc; i++)
+                <font color="#a52a2a"><b>if</b></font> (i != myId)
+                    (<font color="#a52a2a"><b>new</b></font> ListenerThread(i, slave)).start();
+            <font color="#a52a2a"><b>if</b></font> (args[<font color="#ff00ff">3</font>].equals(<font color="#ff00ff">&quot;t&quot;</font>)) slave.propose(<font color="#ff00ff">true</font>);
+            <font color="#a52a2a"><b>else</b></font> slave.propose(<font color="#ff00ff">false</font>);
+            System.out.println(<font color="#ff00ff">&quot;The value decided:&quot;</font> + slave.decide());
+        }
+    }
+}
+</pre>
+</body>
+</html>

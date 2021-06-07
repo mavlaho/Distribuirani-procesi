@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/msgordering/CausalLinker.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*; <font color="#a020f0">import</font> java.net.*; <font color="#a020f0">import</font> java.io.*;
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> CausalLinker <font color="#2e8b57"><b>extends</b></font> Linker {
+    <font color="#2e8b57"><b>int</b></font> M[][];
+    LinkedList deliveryQ = <font color="#a52a2a"><b>new</b></font> LinkedList(); <font color="#0000ff">// deliverable messages</font>
+    LinkedList pendingQ = <font color="#a52a2a"><b>new</b></font> LinkedList(); <font color="#0000ff">// messages with matrix</font>
+    <font color="#2e8b57"><b>public</b></font> CausalLinker(String basename, <font color="#2e8b57"><b>int</b></font> id, <font color="#2e8b57"><b>int</b></font> numProc)
+                                            <font color="#2e8b57"><b>throws</b></font> Exception {
+        <font color="#2e8b57"><b>super</b></font>(basename, id, numProc);
+        M = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>int</b></font>[N][N]; Matrix.setZero(M);
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> sendMsg(<font color="#2e8b57"><b>int</b></font> destId, String tag, String msg){
+        M[myId][destId]++;
+        <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, <font color="#ff00ff">&quot;matrix&quot;</font>, Matrix.write(M));
+        <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, tag, msg);
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> multicast(IntLinkedList destIds,
+                                            String tag, String msg) {
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i=<font color="#ff00ff">0</font>; i&lt;destIds.size(); i++)
+            M[myId][destIds.getEntry(i)]++;
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i=<font color="#ff00ff">0</font>; i&lt;destIds.size(); i++) {
+            <font color="#2e8b57"><b>int</b></font> destId = destIds.getEntry(i);
+            <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, <font color="#ff00ff">&quot;matrix&quot;</font>, Matrix.write(M));
+            <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, tag, msg);
+        }
+    }
+    <font color="#2e8b57"><b>boolean</b></font> okayToRecv(<font color="#2e8b57"><b>int</b></font> W[][], <font color="#2e8b57"><b>int</b></font> srcId) {
+        <font color="#a52a2a"><b>if</b></font> (W[srcId][myId] &gt; M[srcId][myId]+<font color="#ff00ff">1</font>) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> k = <font color="#ff00ff">0</font>; k &lt; N; k++)
+            <font color="#a52a2a"><b>if</b></font> ((k!=srcId) &amp;&amp; (W[k][myId] &gt; M[k][myId])) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">true</font>;
+    }
+    <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> checkPendingQ() {
+        ListIterator iter = pendingQ.listIterator(<font color="#ff00ff">0</font>);
+        <font color="#a52a2a"><b>while</b></font> (iter.hasNext()) {
+            CausalMessage cm = (CausalMessage) iter.next();
+            <font color="#a52a2a"><b>if</b></font> (okayToRecv(cm.getMatrix(), cm.getMessage().getSrcId())){
+                iter.remove(); deliveryQ.add(cm);
+            }
+        }
+    }
+    <font color="#0000ff">// polls the channel given by fromId to add to the pendingQ</font>
+    <font color="#2e8b57"><b>public</b></font> Msg receiveMsg(<font color="#2e8b57"><b>int</b></font> fromId) <font color="#2e8b57"><b>throws</b></font> IOException {
+        checkPendingQ();
+        <font color="#a52a2a"><b>while</b></font> (deliveryQ.isEmpty()) {
+            Msg matrix = <font color="#2e8b57"><b>super</b></font>.receiveMsg(fromId);<font color="#0000ff">// matrix</font>
+            <font color="#2e8b57"><b>int</b></font> [][]W = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>int</b></font>[N][N];
+            Matrix.read(matrix.getMessage(), W);
+            Msg m1 = <font color="#2e8b57"><b>super</b></font>.receiveMsg(fromId);<font color="#0000ff">//app message</font>
+            pendingQ.add(<font color="#a52a2a"><b>new</b></font> CausalMessage(m1, N, W));
+            checkPendingQ();
+        }
+        CausalMessage cm = (CausalMessage) deliveryQ.removeFirst();
+        Matrix.setMax(M, cm.getMatrix());
+        <font color="#a52a2a"><b>return</b></font> cm.getMessage();
+    }
+}
+</pre>
+</body>
+</html>

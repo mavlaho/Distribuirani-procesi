@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>~/code/dprogs/SensorCircToken.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> SensorCircToken <font color="#288850"><b>extends</b></font> CircToken
+<font color="#288850"><b>implements</b></font> MsgHandler, SensorUser {
+    VCLinker comm;
+    Sensor checker;
+    <font color="#288850"><b>int</b></font> coordinator;
+    <font color="#288850"><b>int</b></font> algoCode;
+    <font color="#288850"><b>public</b></font> SensorCircToken(VCLinker comm, <font color="#288850"><b>int</b></font> coordinator, <font color="#288850"><b>int</b></font> algoCode) {
+        <font color="#288850"><b>super</b></font>(comm, coordinator);
+        <font color="#288850"><b>this</b></font>.comm = comm;
+        <font color="#288850"><b>this</b></font>.coordinator = coordinator;
+        <font color="#288850"><b>this</b></font>.algoCode = algoCode;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> initiate() {
+        <font color="#a02828"><b>if</b></font> (algoCode==<font color="#f800f8">0</font>)
+            checker = <font color="#a02828"><b>new</b></font> CentSensor(comm, <font color="#288850"><b>this</b></font>);
+        <font color="#a02828"><b>else</b></font>
+            checker = <font color="#a02828"><b>new</b></font> DistSensor(comm, <font color="#288850"><b>this</b></font>);
+        <font color="#a02828"><b>if</b></font> (!haveToken) checker.localPredicateTrue(comm.vc);
+        <font color="#288850"><b>super</b></font>.initiate();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> sendToken() {
+        <font color="#288850"><b>super</b></font>.sendToken();
+        <font color="#a02828"><b>if</b></font> (!haveToken) checker.localPredicateTrue(comm.vc);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> src, String tag) {
+        checker.handleMsg(m, src, tag);
+        <font color="#288850"><b>super</b></font>.handleMsg(m, src, tag);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> globalPredicateTrue(<font color="#288850"><b>int</b></font> v[]){
+        System.out.println(<font color="#f800f8">&quot;********************************************&quot;</font>);
+        System.out.println(<font color="#f800f8">&quot;Global predicate tru. Cut:&quot;</font> + Util.writeArray(v));
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> globalPredicateFalse(<font color="#288850"><b>int</b></font> pid){
+        System.out.println(<font color="#f800f8">&quot;********************************************&quot;</font>);
+        System.out.println(<font color="#f800f8">&quot;Global predicate false. Process finished:&quot;</font> + pid);
+    }
+}
+</pre>
+</body>
+</html>

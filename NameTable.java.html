@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>~/code/dprogs/NameTable.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> NameTable {
+    <font color="#288850"><b>final</b></font> <font color="#288850"><b>int</b></font> maxSize = <font color="#f800f8">100</font>;
+    <font color="#288850"><b>private</b></font> String[] names = <font color="#a02828"><b>new</b></font> String[maxSize];
+    <font color="#288850"><b>private</b></font> String[] hosts = <font color="#a02828"><b>new</b></font> String[maxSize];
+    <font color="#288850"><b>private</b></font> <font color="#288850"><b>int</b></font>[] ports = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[maxSize];
+    <font color="#288850"><b>private</b></font> <font color="#288850"><b>int</b></font> dirsize = <font color="#f800f8">0</font>;
+    <font color="#288850"><b>int</b></font> search(String s) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; dirsize; i++)
+            <font color="#a02828"><b>if</b></font> (names[i].equals(s)) <font color="#a02828"><b>return</b></font> i;
+        <font color="#a02828"><b>return</b></font> -<font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>int</b></font> insert(String s, String hostName, <font color="#288850"><b>int</b></font> portNumber) {
+        <font color="#288850"><b>int</b></font> oldIndex = search(s); <font color="#0000f8">// is it already there</font>
+        <font color="#a02828"><b>if</b></font> (oldIndex == -<font color="#f800f8">1</font>) {
+            names[dirsize] = s;
+            hosts[dirsize] = hostName;
+            ports[dirsize] = portNumber;
+            dirsize++;
+            <font color="#a02828"><b>return</b></font> <font color="#f800f8">1</font>;
+        } <font color="#a02828"><b>else</b></font>
+            <font color="#a02828"><b>return</b></font> <font color="#f800f8">0</font>;
+    }
+    <font color="#288850"><b>int</b></font> getPort(<font color="#288850"><b>int</b></font> index) {
+        <font color="#a02828"><b>return</b></font> ports[index];
+    }
+    String getHostName(<font color="#288850"><b>int</b></font> index) {
+        <font color="#a02828"><b>return</b></font> hosts[index];
+    }
+}
+</pre>
+</body>
+</html>

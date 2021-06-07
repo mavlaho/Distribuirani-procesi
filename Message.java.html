@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>~/code/dprogs/Message.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Message {
+    <font color="#288850"><b>int</b></font> srcId, destId;
+    String tag;
+    String msg;
+    <font color="#288850"><b>public</b></font> Message(<font color="#288850"><b>int</b></font> s, <font color="#288850"><b>int</b></font> t, String msgType, String buf) {
+        <font color="#288850"><b>this</b></font>.srcId = s;
+        destId = t;
+        tag = msgType;
+        msg = buf;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getSrcId() {
+        <font color="#a02828"><b>return</b></font> srcId;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getDestId() {
+        <font color="#a02828"><b>return</b></font> destId;
+    }
+    <font color="#288850"><b>public</b></font> String getTag() {
+        <font color="#a02828"><b>return</b></font> tag;
+    }
+    <font color="#288850"><b>public</b></font> String getMessage() {
+        <font color="#a02828"><b>return</b></font> msg;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getMessageInt() {
+        Util.println(<font color="#f800f8">&quot;msg is:&quot;</font> + msg);
+        StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(msg);
+        <font color="#a02828"><b>return</b></font> Integer.parseInt(st.nextToken());
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> Message parseMsg(StringTokenizer st){
+        <font color="#288850"><b>int</b></font> srcId = Integer.parseInt(st.nextToken());
+        <font color="#288850"><b>int</b></font> destId = Integer.parseInt(st.nextToken());
+        String tag = st.nextToken();
+        String msg = st.nextToken(<font color="#f800f8">&quot;#&quot;</font>);
+        <font color="#a02828"><b>return</b></font> <font color="#a02828"><b>new</b></font> Message(srcId, destId, tag, msg);
+    }
+    <font color="#288850"><b>public</b></font> String toString(){
+        String s = String.valueOf(srcId)+<font color="#f800f8">&quot; &quot;</font> +
+                    String.valueOf(destId)+ <font color="#f800f8">&quot; &quot;</font> +
+                    tag + <font color="#f800f8">&quot; &quot;</font> + msg + <font color="#f800f8">&quot;#&quot;</font>;
+        <font color="#a02828"><b>return</b></font> s;
+    }
+}
+</pre>
+</body>
+</html>

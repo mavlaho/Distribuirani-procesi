@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>~/code/dprogs/DirectClock.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> DirectClock {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font>[] clock;
+    <font color="#288850"><b>int</b></font> myId;
+    <font color="#288850"><b>public</b></font> DirectClock(<font color="#288850"><b>int</b></font> numProc, <font color="#288850"><b>int</b></font> id) {
+        myId = id;
+        clock = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[numProc];
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; numProc; i++) clock[i] = <font color="#f800f8">0</font>;
+        clock[myId] = <font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getValue(<font color="#288850"><b>int</b></font> i) {
+        <font color="#a02828"><b>return</b></font> clock[i];
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> tick() {
+        clock[myId]++;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendAction() {
+        <font color="#0000f8">// sentValue = clock[myId];</font>
+        tick();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> receiveAction(<font color="#288850"><b>int</b></font> sender, <font color="#288850"><b>int</b></font> sentValue) {
+        clock[sender] = Util.max(clock[sender], sentValue);
+        clock[myId] = Util.max(clock[myId], sentValue) + <font color="#f800f8">1</font>;
+    }
+}
+
+</pre>
+</body>
+</html>

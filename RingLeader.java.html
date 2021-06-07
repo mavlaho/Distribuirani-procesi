@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>~/bks/conc/dprogs/RingLeader.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> RingLeader <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Election {
+    <font color="#2e8b57"><b>int</b></font> number;
+    <font color="#2e8b57"><b>int</b></font> leaderId = -<font color="#ff00ff">1</font>;
+    <font color="#2e8b57"><b>int</b></font> next;
+    <font color="#2e8b57"><b>boolean</b></font> awake = <font color="#ff00ff">false</font>;
+    <font color="#2e8b57"><b>public</b></font> RingLeader(Linker initComm, <font color="#2e8b57"><b>int</b></font> number) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        <font color="#2e8b57"><b>this</b></font>.number = number;
+        next = (myId + <font color="#ff00ff">1</font>) % N;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>int</b></font> getLeader(){
+        <font color="#a52a2a"><b>while</b></font> (leaderId == -<font color="#ff00ff">1</font>) myWait();
+        <font color="#a52a2a"><b>return</b></font> leaderId;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#2e8b57"><b>int</b></font> j = m.getMessageInt(); <font color="#0000ff">// get the number</font>
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;election&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> (j &gt; number)
+                sendMsg(next, <font color="#ff00ff">&quot;election&quot;</font>, j); <font color="#0000ff">// forward the message</font>
+            <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (j == number) <font color="#0000ff">// I won!</font>
+                sendMsg(next, <font color="#ff00ff">&quot;leader&quot;</font>, myId);
+            <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> ((j &lt; number) &amp;&amp; !awake) startElection();
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;leader&quot;</font>)) {
+            leaderId = j;
+            notify();
+            <font color="#a52a2a"><b>if</b></font> (j != myId) sendMsg(next, <font color="#ff00ff">&quot;leader&quot;</font>, j);
+        }
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> startElection() {
+        awake = <font color="#ff00ff">true</font>;
+        sendMsg(next, <font color="#ff00ff">&quot;election&quot;</font>, number);
+    }
+}
+</pre>
+</body>
+</html>

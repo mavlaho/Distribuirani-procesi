@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/consensus/TwoPhaseParticipant.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> TwoPhaseParticipant <font color="#2e8b57"><b>extends</b></font> Process {
+    <font color="#2e8b57"><b>boolean</b></font> localCommit;
+    <font color="#2e8b57"><b>boolean</b></font> globalCommit;
+    <font color="#2e8b57"><b>boolean</b></font> done = <font color="#ff00ff">false</font>;
+    <font color="#2e8b57"><b>boolean</b></font> hasProposed = <font color="#ff00ff">false</font>;
+    <font color="#2e8b57"><b>public</b></font> TwoPhaseParticipant(Linker initComm) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> propose(<font color="#2e8b57"><b>boolean</b></font> vote) {
+        localCommit = vote;
+        hasProposed = <font color="#ff00ff">true</font>;
+        notify();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>boolean</b></font> decide() {
+        <font color="#a52a2a"><b>while</b></font> (!done) myWait();
+        <font color="#a52a2a"><b>return</b></font> globalCommit;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#a52a2a"><b>while</b></font> (!hasProposed) myWait();
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;request&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> (localCommit)
+                sendMsg(src, <font color="#ff00ff">&quot;yes&quot;</font>);
+            <font color="#a52a2a"><b>else</b></font>
+                sendMsg(src, <font color="#ff00ff">&quot;no&quot;</font>);
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;finalCommit&quot;</font>)) {
+            globalCommit = <font color="#ff00ff">true</font>;
+            done = <font color="#ff00ff">true</font>;
+            notify();
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;finalAbort&quot;</font>)) {
+            globalCommit = <font color="#ff00ff">false</font>;
+            done = <font color="#ff00ff">true</font>;
+            notify();
+        }
+    }
+}
+</pre>
+</body>
+</html>

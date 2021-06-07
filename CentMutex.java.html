@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/mutex/CentMutex.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> CentMutex <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Lock {
+    <font color="#0000ff">// assumes that P_0 coordinates and does not request locks.</font>
+    <font color="#2e8b57"><b>boolean</b></font> haveToken;
+    <font color="#2e8b57"><b>final</b></font> <font color="#2e8b57"><b>int</b></font> leader = <font color="#ff00ff">0</font>;
+    IntLinkedList pendingQ = <font color="#a52a2a"><b>new</b></font> IntLinkedList();
+    <font color="#2e8b57"><b>public</b></font> CentMutex(Linker initComm) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        haveToken = (myId == leader);
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> requestCS() {
+        sendMsg(leader, <font color="#ff00ff">&quot;request&quot;</font>);
+        <font color="#a52a2a"><b>while</b></font> (!haveToken) myWait();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> releaseCS() {
+        sendMsg(leader, <font color="#ff00ff">&quot;release&quot;</font>);
+        haveToken = <font color="#ff00ff">false</font>;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;request&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> (haveToken){
+                sendMsg(src, <font color="#ff00ff">&quot;okay&quot;</font>);
+                haveToken = <font color="#ff00ff">false</font>;
+            }
+            <font color="#a52a2a"><b>else</b></font>
+                pendingQ.add(src);
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;release&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> (!pendingQ.isEmpty()) {
+                <font color="#2e8b57"><b>int</b></font> pid = pendingQ.removeHead();
+                sendMsg(pid, <font color="#ff00ff">&quot;okay&quot;</font>);
+            } <font color="#a52a2a"><b>else</b></font>
+                haveToken = <font color="#ff00ff">true</font>;
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;okay&quot;</font>)) {
+            haveToken = <font color="#ff00ff">true</font>;
+            notify();
+        }
+    }
+}
+</pre>
+</body>
+</html>

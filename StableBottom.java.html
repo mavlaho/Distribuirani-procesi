@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>~/code/dprogs/StableBottom.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.Timer;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> StableBottom <font color="#288850"><b>extends</b></font> Process <font color="#288850"><b>implements</b></font> Lock {
+    <font color="#288850"><b>int</b></font> myState = <font color="#f800f8">0</font>;
+    <font color="#288850"><b>int</b></font> leftState = <font color="#f800f8">0</font>;
+    <font color="#288850"><b>int</b></font> next;
+    Timer t = <font color="#a02828"><b>new</b></font> Timer();
+    <font color="#288850"><b>boolean</b></font> tokenSent = <font color="#f800f8">false</font>;
+    <font color="#288850"><b>public</b></font> StableBottom(Linker initComm) {
+        <font color="#288850"><b>super</b></font>(initComm);
+        next = (myId + <font color="#f800f8">1</font>) % N;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> initiate() {
+        t.schedule(<font color="#a02828"><b>new</b></font> RestartTask(<font color="#288850"><b>this</b></font>), <font color="#f800f8">1000</font>, <font color="#f800f8">1000</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> requestCS() {
+        <font color="#a02828"><b>while</b></font> (leftState != myState) myWait();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> releaseCS() {
+        myState = (leftState + <font color="#f800f8">1</font>) % N;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> sendToken() {
+        <font color="#a02828"><b>if</b></font> (!tokenSent) {
+          sendMsg(next, <font color="#f800f8">&quot;token&quot;</font>, myState);
+          tokenSent = <font color="#f800f8">true</font>;
+        } <font color="#a02828"><b>else</b></font> tokenSent = <font color="#f800f8">false</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> src, String tag) {
+        <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;token&quot;</font>) )
+        {
+            leftState = m.getMessageInt();
+            notify();
+            Util.mySleep(<font color="#f800f8">1000</font>);
+            sendMsg(next, <font color="#f800f8">&quot;token&quot;</font>, myState);
+            tokenSent = <font color="#f800f8">true</font>;
+        } <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;restart&quot;</font>) )
+            sendToken();
+    }
+}
+</pre>
+</body>
+</html>

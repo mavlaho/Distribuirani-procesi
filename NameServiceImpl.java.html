@@ -1,0 +1,57 @@
+<html>
+<head>
+<title>~/code/dprogs/NameServiceImpl.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.rmi.*;
+<font color="#a020f0">import</font> java.rmi.server.UnicastRemoteObject;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> NameServiceImpl <font color="#288850"><b>extends</b></font> UnicastRemoteObject
+        <font color="#288850"><b>implements</b></font> NameService {
+    <font color="#288850"><b>final</b></font> <font color="#288850"><b>int</b></font> maxSize = <font color="#f800f8">100</font>;
+    <font color="#288850"><b>private</b></font> String[] names = <font color="#a02828"><b>new</b></font> String[maxSize];
+    <font color="#288850"><b>private</b></font> String[] hosts = <font color="#a02828"><b>new</b></font> String[maxSize];
+    <font color="#288850"><b>private</b></font> <font color="#288850"><b>int</b></font>[] ports = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[maxSize];
+    <font color="#288850"><b>private</b></font> <font color="#288850"><b>int</b></font> dirsize = <font color="#f800f8">0</font>;
+    <font color="#288850"><b>public</b></font> NameServiceImpl() <font color="#288850"><b>throws</b></font> RemoteException {
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> search(String s) <font color="#288850"><b>throws</b></font> RemoteException {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; dirsize; i++)
+            <font color="#a02828"><b>if</b></font> (names[i].equals(s)) <font color="#a02828"><b>return</b></font> i;
+        <font color="#a02828"><b>return</b></font> -<font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> insert(String s, String hostName, <font color="#288850"><b>int</b></font> portNumber)
+            <font color="#288850"><b>throws</b></font> RemoteException {
+        <font color="#288850"><b>int</b></font> oldIndex = search(s); <font color="#0000f8">// is it already there</font>
+        <font color="#a02828"><b>if</b></font> ((oldIndex == -<font color="#f800f8">1</font>) &amp;&amp; (dirsize &lt; maxSize)) {
+            names[dirsize] = s;
+            hosts[dirsize] = hostName;
+            ports[dirsize] = portNumber;
+            dirsize++;
+            <font color="#a02828"><b>return</b></font> <font color="#f800f8">1</font>;
+        } <font color="#a02828"><b>else</b></font>
+            <font color="#a02828"><b>return</b></font> <font color="#f800f8">0</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getPort(<font color="#288850"><b>int</b></font> index) <font color="#288850"><b>throws</b></font> RemoteException {
+        <font color="#a02828"><b>return</b></font> ports[index];
+    }
+    <font color="#288850"><b>public</b></font> String getHostName(<font color="#288850"><b>int</b></font> index) <font color="#288850"><b>throws</b></font> RemoteException {
+        <font color="#a02828"><b>return</b></font> hosts[index];
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> main(String args[]) {
+        <font color="#0000f8">// create security manager</font>
+        System.setSecurityManager(<font color="#a02828"><b>new</b></font> RMISecurityManager());
+        <font color="#a02828"><b>try</b></font> {
+            NameServiceImpl obj = <font color="#a02828"><b>new</b></font> NameServiceImpl();
+            Naming.rebind(<font color="#f800f8">&quot;MyNameServer&quot;</font>, obj);
+            System.out.println(<font color="#f800f8">&quot;MyNameServer bound in registry&quot;</font>);
+        } <font color="#a02828"><b>catch</b></font> (Exception e) {
+            System.out.println(<font color="#f800f8">&quot;NameServiceImpl err: &quot;</font> + e.getMessage());
+        }
+    }
+}
+
+</pre>
+</body>
+</html>

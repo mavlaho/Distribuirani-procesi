@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>~/code/dprogs/NameRmiClient.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.rmi.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> NameRmiClient {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> main(String args[]) {
+        <font color="#a02828"><b>try</b></font> {
+            NameService r = (NameService)
+                                Naming.lookup(<font color="#f800f8">&quot;rmi://linux02/MyNameServer&quot;</font>);
+            <font color="#288850"><b>int</b></font> i = r.insert(<font color="#f800f8">&quot;p1&quot;</font>, <font color="#f800f8">&quot;tick.ece&quot;</font>, <font color="#f800f8">2058</font>);
+            <font color="#288850"><b>int</b></font> j = r.search(<font color="#f800f8">&quot;p1&quot;</font>);
+            <font color="#a02828"><b>if</b></font> (j != -<font color="#f800f8">1</font>)
+                System.out.println(r.getHostName(j) + <font color="#f800f8">&quot;:&quot;</font> + r.getPort(j));
+        } <font color="#a02828"><b>catch</b></font> (Exception e) {
+            System.out.println(e);
+        }
+    }
+}
+</pre>
+</body>
+</html>

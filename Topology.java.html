@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>~/code/dprogs/Topology.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.io.*;
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Topology {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> readNeighbors(<font color="#288850"><b>int</b></font> myId, <font color="#288850"><b>int</b></font> N,
+                                     IntLinkedList neighbors) {
+        Util.println(<font color="#f800f8">&quot;Reading topology&quot;</font>);
+        <font color="#a02828"><b>try</b></font> {
+            BufferedReader dIn = <font color="#a02828"><b>new</b></font> BufferedReader(
+                                <font color="#a02828"><b>new</b></font> FileReader(<font color="#f800f8">&quot;topology&quot;</font> + myId));
+            StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(dIn.readLine());
+            <font color="#a02828"><b>while</b></font> (st.hasMoreTokens()) {
+                <font color="#288850"><b>int</b></font> neighbor = Integer.parseInt(st.nextToken());
+                neighbors.add(neighbor);
+            }
+        } <font color="#a02828"><b>catch</b></font> (FileNotFoundException e) {
+            <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; N; j++)
+                <font color="#a02828"><b>if</b></font> (j != myId) neighbors.add(j);
+        } <font color="#a02828"><b>catch</b></font> (IOException e) {
+            System.err.println(e);
+        }
+        Util.println(neighbors.toString());
+    }
+}
+</pre>
+</body>
+</html>

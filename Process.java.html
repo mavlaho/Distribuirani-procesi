@@ -1,0 +1,63 @@
+<html>
+<head>
+<title>~/code/dprogs/Process.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.io.*;
+<font color="#a020f0">import</font> java.lang.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Process <font color="#288850"><b>implements</b></font> MsgHandler {
+    <font color="#288850"><b>int</b></font> N, myId;
+    Linker comm;
+    <font color="#288850"><b>public</b></font> Process(Linker initComm) {
+        comm = initComm;
+        myId = comm.getMyId();
+        N = comm.getNumProc();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendMsg(<font color="#288850"><b>int</b></font> destId, String tag, String msg) {
+        Util.println(<font color="#f800f8">&quot;Sending msg to &quot;</font> + destId + <font color="#f800f8">&quot;:&quot;</font> +tag + <font color="#f800f8">&quot; &quot;</font> + msg);
+        comm.sendMsg(destId, tag, msg);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendMsg(<font color="#288850"><b>int</b></font> destId, String tag, <font color="#288850"><b>int</b></font> msg) {
+        sendMsg(destId, tag, String.valueOf(msg)+<font color="#f800f8">&quot; &quot;</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendMsg(<font color="#288850"><b>int</b></font> destId, String tag, <font color="#288850"><b>int</b></font> msg1, <font color="#288850"><b>int</b></font> msg2) {
+        sendMsg(destId,tag,String.valueOf(msg1)+<font color="#f800f8">&quot; &quot;</font>+String.valueOf(msg2)+<font color="#f800f8">&quot; &quot;</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendMsg(<font color="#288850"><b>int</b></font> destId, String tag) {
+        sendMsg(destId, tag, <font color="#f800f8">&quot; 0 &quot;</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> broadcastMsg(String tag, <font color="#288850"><b>int</b></font> msg) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; N; i++)
+            <font color="#a02828"><b>if</b></font> (i != myId) sendMsg(i, tag, msg);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendToNeighbors(String tag, <font color="#288850"><b>int</b></font> msg) {
+        comm.multicast(comm.neighbors, tag, String.valueOf(msg)+<font color="#f800f8">&quot; &quot;</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>boolean</b></font> isNeighbor(<font color="#288850"><b>int</b></font> i) {
+        <font color="#a02828"><b>if</b></font> (comm.neighbors.contains(i)) <font color="#a02828"><b>return</b></font> <font color="#f800f8">true</font>;
+        <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>return</b></font> <font color="#f800f8">false</font>;
+    }
+    <font color="#288850"><b>public</b></font> Message receiveMsg(<font color="#288850"><b>int</b></font> fromId) {
+        <font color="#a02828"><b>try</b></font> {
+            <font color="#a02828"><b>return</b></font> comm.receiveMsg(fromId);
+        } <font color="#a02828"><b>catch</b></font> (IOException e){
+            System.out.println(e);
+            comm.close();
+            <font color="#a02828"><b>return</b></font> <font color="#f800f8">null</font>;
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> myWait() {
+        <font color="#a02828"><b>try</b></font> {
+            wait();
+        } <font color="#a02828"><b>catch</b></font> (InterruptedException e) {System.err.println(e);
+        }
+    }
+
+}
+</pre>
+</body>
+</html>

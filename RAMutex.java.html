@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>~/bks/conc/dprogs/RAMutex.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> RAMutex <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Lock {
+    <font color="#2e8b57"><b>int</b></font> myts;
+    LamportClock c = <font color="#a52a2a"><b>new</b></font> LamportClock();
+    IntLinkedList pendingQ = <font color="#a52a2a"><b>new</b></font> IntLinkedList();
+    <font color="#2e8b57"><b>int</b></font> numOkay = <font color="#ff00ff">0</font>;
+    <font color="#2e8b57"><b>public</b></font> RAMutex(Linker initComm) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        myts = Symbols.Infinity;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> requestCS() {
+        c.tick();
+        myts = c.getValue();
+        broadcastMsg(<font color="#ff00ff">&quot;request&quot;</font>, myts);
+        numOkay = <font color="#ff00ff">0</font>;
+        <font color="#a52a2a"><b>while</b></font> (numOkay &lt; N-<font color="#ff00ff">1</font>)
+            myWait();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> releaseCS() {
+        myts = Symbols.Infinity;
+        <font color="#a52a2a"><b>while</b></font> (!pendingQ.isEmpty()) {
+            <font color="#2e8b57"><b>int</b></font> pid = pendingQ.removeHead();
+            sendMsg(pid, <font color="#ff00ff">&quot;okay&quot;</font>, c.getValue());
+        }
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#2e8b57"><b>int</b></font> timeStamp = m.getMessageInt();
+        c.receiveAction(src, timeStamp);
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;request&quot;</font>)) {
+            <font color="#a52a2a"><b>if</b></font> ((myts == Symbols.Infinity) <font color="#0000ff">// not interested in CS</font>
+                    || (timeStamp &lt; myts)
+                    || ((timeStamp == myts) &amp;&amp; (src &lt; myId)))
+                sendMsg(src, <font color="#ff00ff">&quot;okay&quot;</font>, c.getValue());
+            <font color="#a52a2a"><b>else</b></font>
+                pendingQ.add(src);
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;okay&quot;</font>)) {
+            numOkay++;
+            <font color="#a52a2a"><b>if</b></font> (numOkay == N - <font color="#ff00ff">1</font>)
+                notify(); <font color="#0000ff">// okayCS() may be true now</font>
+        }
+    }
+}
+</pre>
+</body>
+</html>

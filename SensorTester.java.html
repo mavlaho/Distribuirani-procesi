@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>~/code/dprogs/SensorTester.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> SensorTester {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> main(String[] args) <font color="#288850"><b>throws</b></font> Exception {
+        String baseName = args[<font color="#f800f8">0</font>];
+        <font color="#288850"><b>int</b></font> myId = Integer.parseInt(args[<font color="#f800f8">1</font>]);
+        <font color="#288850"><b>int</b></font> numProc = Integer.parseInt(args[<font color="#f800f8">2</font>]);
+        VCLinker comm = <font color="#a02828"><b>new</b></font> VCLinker(baseName, myId, numProc);
+        <font color="#288850"><b>int</b></font> algoCode = Integer.parseInt(args[<font color="#f800f8">3</font>]);
+        SensorCircToken sp = <font color="#a02828"><b>new</b></font> SensorCircToken(
+                                   comm, Symbols.coordinator, algoCode);
+        sp.initiate();
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; numProc; i++)
+            <font color="#a02828"><b>if</b></font> (i != myId) (<font color="#a02828"><b>new</b></font> ListenerThread(i, sp)).start();
+    }
+}
+</pre>
+</body>
+</html>

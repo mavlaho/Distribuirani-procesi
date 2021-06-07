@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/mutex/DinMutex.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> DinMutex <font color="#2e8b57"><b>extends</b></font> Process <font color="#2e8b57"><b>implements</b></font> Lock {
+    <font color="#2e8b57"><b>private</b></font> <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>final</b></font> <font color="#2e8b57"><b>int</b></font> thinking = <font color="#ff00ff">0</font>, hungry = <font color="#ff00ff">1</font>, eating = <font color="#ff00ff">2</font>;
+    <font color="#2e8b57"><b>boolean</b></font> fork[] = <font color="#ff00ff">null</font>,  dirty[] = <font color="#ff00ff">null</font>, request[] = <font color="#ff00ff">null</font>;
+    <font color="#2e8b57"><b>int</b></font> myState = thinking;
+    <font color="#2e8b57"><b>public</b></font> DinMutex(Linker initComm) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        fork = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>boolean</b></font>[N]; dirty = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>boolean</b></font>[N];
+        request = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>boolean</b></font>[N];
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++) {
+            <font color="#a52a2a"><b>if</b></font> ((myId &gt; i) &amp;&amp; (isNeighbor(i))) {
+                fork[i] = <font color="#ff00ff">false</font>; request[i] = <font color="#ff00ff">true</font>;
+            } <font color="#a52a2a"><b>else</b></font> { fork[i] = <font color="#ff00ff">true</font>; request[i] = <font color="#ff00ff">false</font>; }
+            dirty[i] = <font color="#ff00ff">true</font>;
+        }
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> requestCS() {
+        myState = hungry;
+        <font color="#a52a2a"><b>if</b></font> (haveForks()) myState = eating;
+        <font color="#a52a2a"><b>else</b></font>
+            <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++)
+                <font color="#a52a2a"><b>if</b></font> (request[i] &amp;&amp; !fork[i]) {
+                    sendMsg(i, <font color="#ff00ff">&quot;Request&quot;</font>); request[i] = <font color="#ff00ff">false</font>;
+                }
+        <font color="#a52a2a"><b>while</b></font> (myState != eating) myWait();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> releaseCS() {
+        myState = thinking;
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++) {
+            dirty[i] = <font color="#ff00ff">true</font>;
+            <font color="#a52a2a"><b>if</b></font> (request[i]) { sendMsg(i, <font color="#ff00ff">&quot;Fork&quot;</font>);  fork[i] = <font color="#ff00ff">false</font>; }
+        }
+    }
+    <font color="#2e8b57"><b>boolean</b></font> haveForks() {
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++)
+            <font color="#a52a2a"><b>if</b></font> (!fork[i]) <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">false</font>;
+        <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">true</font>;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;Request&quot;</font>)) {
+            request[src] = <font color="#ff00ff">true</font>;
+            <font color="#a52a2a"><b>if</b></font> ((myState != eating) &amp;&amp; fork[src] &amp;&amp; dirty[src]) {
+                sendMsg(src, <font color="#ff00ff">&quot;Fork&quot;</font>);  fork[src] = <font color="#ff00ff">false</font>;
+                <font color="#a52a2a"><b>if</b></font> (myState == hungry){
+                    sendMsg(src, <font color="#ff00ff">&quot;Request&quot;</font>); request[src] = <font color="#ff00ff">false</font>;
+                }
+            }
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;Fork&quot;</font>)) {
+            fork[src] = <font color="#ff00ff">true</font>; dirty[src] = <font color="#ff00ff">false</font>;
+            <font color="#a52a2a"><b>if</b></font> (haveForks()) {
+                myState = eating; notify();
+            }
+        }
+    }
+}
+</pre>
+</body>
+</html>

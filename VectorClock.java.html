@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>~/code/dprogs/VectorClock.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> VectorClock {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font>[] v;
+    <font color="#288850"><b>int</b></font> myId;
+    <font color="#288850"><b>int</b></font> N;
+    <font color="#288850"><b>public</b></font> VectorClock(<font color="#288850"><b>int</b></font> numProc, <font color="#288850"><b>int</b></font> id) {
+        myId = id;
+        N = numProc;
+        v = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[numProc];
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; N; i++) v[i] = <font color="#f800f8">0</font>;
+        v[myId] = <font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> tick() {
+        v[myId]++;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendAction() {
+        <font color="#0000f8">//include the vector in the message</font>
+        v[myId]++;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> receiveAction(<font color="#288850"><b>int</b></font>[] sentValue) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; N; i++)
+            v[i] = Util.max(v[i], sentValue[i]);
+        v[myId]++;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getValue(<font color="#288850"><b>int</b></font> i) {
+        <font color="#a02828"><b>return</b></font> v[i];
+    }
+    <font color="#288850"><b>public</b></font> String toString(){
+        <font color="#a02828"><b>return</b></font> Util.writeArray(v);
+    }
+}
+</pre>
+</body>
+</html>

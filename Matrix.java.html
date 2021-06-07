@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>~/code/dprogs/Matrix.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Matrix {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> String write(<font color="#288850"><b>int</b></font> A[][]){
+        StringBuffer s = <font color="#a02828"><b>new</b></font> StringBuffer();
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A.length; j++)
+            s.append(Util.writeArray(A[j]) + <font color="#f800f8">&quot; &quot;</font>);
+        <font color="#a02828"><b>return</b></font> <font color="#a02828"><b>new</b></font> String(s.toString());
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> read(String s, <font color="#288850"><b>int</b></font> A[][]) {
+        StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(s);
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; A.length; i++)
+            <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A[i].length; j++)
+                A[i][j] = Integer.parseInt(st.nextToken());
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> setZero(<font color="#288850"><b>int</b></font> A[][]) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; A.length; i++)
+            <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A[i].length; j++)
+                A[i][j] = <font color="#f800f8">0</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> setMax(<font color="#288850"><b>int</b></font> A[][], <font color="#288850"><b>int</b></font> B[][]) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; A.length; i++)
+            <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A[i].length; j++)
+                A[i][j] = Util.max(A[i][j], B[i][j]);
+    }
+}
+</pre>
+</body>
+</html>

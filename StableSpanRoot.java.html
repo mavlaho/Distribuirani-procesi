@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>~/code/dprogs/StableSpanRoot.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.Timer;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> StableSpanRoot <font color="#288850"><b>extends</b></font> Process {
+    <font color="#288850"><b>int</b></font> parent = -<font color="#f800f8">1</font>;
+    <font color="#288850"><b>int</b></font> dist = <font color="#f800f8">0</font>;
+    Timer t = <font color="#a02828"><b>new</b></font> Timer();
+    <font color="#288850"><b>public</b></font> StableSpanRoot(Linker initComm) {
+        <font color="#288850"><b>super</b></font>(initComm);
+        t.schedule(<font color="#a02828"><b>new</b></font> RestartTask(<font color="#288850"><b>this</b></font>), <font color="#f800f8">1000</font>, <font color="#f800f8">1000</font>);
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> recalculate(){
+            parent = -<font color="#f800f8">1</font>;
+            dist = <font color="#f800f8">0</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+        <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;Q.dist&quot;</font>)) {
+                sendMsg(source, <font color="#f800f8">&quot;A.dist&quot;</font>, <font color="#f800f8">0</font>);
+        } <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;restart&quot;</font>)) {
+            recalculate();
+        }
+    }
+}
+</pre>
+</body>
+</html>

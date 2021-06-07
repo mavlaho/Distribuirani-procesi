@@ -1,0 +1,29 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/other/GlobalFuncTester.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> GlobalFuncTester <font color="#2e8b57"><b>implements</b></font> FuncUser {
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>int</b></font> func(<font color="#2e8b57"><b>int</b></font> x, <font color="#2e8b57"><b>int</b></font> y) {
+        <font color="#a52a2a"><b>return</b></font> x + y;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>void</b></font> main(String[] args) <font color="#2e8b57"><b>throws</b></font> Exception {
+        <font color="#2e8b57"><b>int</b></font> myId = Integer.parseInt(args[<font color="#ff00ff">1</font>]);
+        <font color="#2e8b57"><b>int</b></font> numProc = Integer.parseInt(args[<font color="#ff00ff">2</font>]);
+        Linker comm = <font color="#a52a2a"><b>new</b></font> Linker(args[<font color="#ff00ff">0</font>], myId, numProc);
+        GlobalFunc g = <font color="#a52a2a"><b>new</b></font> GlobalFunc(comm, (myId == <font color="#ff00ff">0</font>));
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; numProc; i++)
+            <font color="#a52a2a"><b>if</b></font> (i != myId)
+                (<font color="#a52a2a"><b>new</b></font> ListenerThread(i, g)).start();
+        <font color="#2e8b57"><b>int</b></font> myValue = Integer.parseInt(args[<font color="#ff00ff">3</font>]);
+        GlobalFuncTester h = <font color="#a52a2a"><b>new</b></font> GlobalFuncTester();
+        g.initialize(myValue, h);
+        <font color="#2e8b57"><b>int</b></font> globalSum = g.computeGlobal();
+        System.out.println(<font color="#ff00ff">&quot;The global sum is &quot;</font> + globalSum);
+    }
+}
+</pre>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>~/code/dprogs/Util.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Util {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>int</b></font> max(<font color="#288850"><b>int</b></font> a, <font color="#288850"><b>int</b></font> b) {
+        <font color="#a02828"><b>if</b></font> (a &gt; b) <font color="#a02828"><b>return</b></font> a;
+        <font color="#a02828"><b>return</b></font> b;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> mySleep(<font color="#288850"><b>int</b></font> time) {
+        <font color="#a02828"><b>try</b></font> {
+            Thread.sleep(time);
+        } <font color="#a02828"><b>catch</b></font> (InterruptedException e) {
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> myWait(Object obj) {
+        <font color="#a02828"><b>try</b></font> {
+            obj.wait();
+        } <font color="#a02828"><b>catch</b></font> (InterruptedException e) {
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>boolean</b></font> lessThan(<font color="#288850"><b>int</b></font> A[], <font color="#288850"><b>int</b></font> B[]) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A.length; j++)
+            <font color="#a02828"><b>if</b></font> (A[j] &gt; B[j]) <font color="#a02828"><b>return</b></font> <font color="#f800f8">false</font>;
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A.length; j++)
+            <font color="#a02828"><b>if</b></font> (A[j] &lt; B[j]) <font color="#a02828"><b>return</b></font> <font color="#f800f8">true</font>;
+        <font color="#a02828"><b>return</b></font> <font color="#f800f8">false</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>int</b></font> maxArray(<font color="#288850"><b>int</b></font> A[]) {
+        <font color="#288850"><b>int</b></font> v = A[<font color="#f800f8">0</font>];
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i=<font color="#f800f8">0</font>; i&lt;A.length; i++)
+            <font color="#a02828"><b>if</b></font> (A[i] &gt; v) v = A[i];
+        <font color="#a02828"><b>return</b></font> v;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> String writeArray(<font color="#288850"><b>int</b></font> A[]){
+        StringBuffer s = <font color="#a02828"><b>new</b></font> StringBuffer();
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A.length; j++)
+            s.append(String.valueOf(A[j]) + <font color="#f800f8">&quot; &quot;</font>);
+        <font color="#a02828"><b>return</b></font> <font color="#a02828"><b>new</b></font> String(s.toString());
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> readArray(String s, <font color="#288850"><b>int</b></font> A[]) {
+        StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(s);
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; A.length; j++)
+            A[j] = Integer.parseInt(st.nextToken());
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>int</b></font> searchArray(<font color="#288850"><b>int</b></font> A[], <font color="#288850"><b>int</b></font> x) {
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; A.length; i++)
+            <font color="#a02828"><b>if</b></font> (A[i] == x) <font color="#a02828"><b>return</b></font> i;
+        <font color="#a02828"><b>return</b></font> -<font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>void</b></font> println(String s){
+        <font color="#a02828"><b>if</b></font> (Symbols.debugFlag) {
+            System.out.println(s);
+            System.out.flush();
+        }
+    }
+}
+</pre>
+</body>
+</html>

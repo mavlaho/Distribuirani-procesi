@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>~/code/dprogs/Tree.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Tree <font color="#288850"><b>extends</b></font> Process {
+    <font color="#288850"><b>int</b></font> parent = -<font color="#f800f8">1</font>;
+    <font color="#288850"><b>int</b></font> level;
+    <font color="#288850"><b>public</b></font> Tree(Linker initComm, <font color="#288850"><b>boolean</b></font> isRoot) {
+        <font color="#288850"><b>super</b></font>(initComm);
+        <font color="#a02828"><b>if</b></font> (isRoot) initiate();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> initiate() {
+        parent = myId;
+        level = <font color="#f800f8">0</font>;
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; N; i++)
+            <font color="#a02828"><b>if</b></font> (isNeighbor(i))
+                sendMsg(i, <font color="#f800f8">&quot;invite&quot;</font>, level);
+        myWait();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+        <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;invite&quot;</font>)) {
+            <font color="#a02828"><b>if</b></font> (parent == -<font color="#f800f8">1</font>) {
+                parent = source;
+                level = m.getMessageInt();
+                <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; N; i++)
+                    <font color="#a02828"><b>if</b></font> (isNeighbor(i) &amp;&amp; (i != source))
+                        sendMsg(i, <font color="#f800f8">&quot;invite&quot;</font>, level + <font color="#f800f8">1</font>);
+            }
+        }
+    }
+}
+</pre>
+</body>
+</html>

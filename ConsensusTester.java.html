@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/consensus/ConsensusTester.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> ConsensusTester {
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>void</b></font> main(String[] args) <font color="#2e8b57"><b>throws</b></font> Exception {
+        String baseName = args[<font color="#ff00ff">0</font>];
+        <font color="#2e8b57"><b>int</b></font> myId = Integer.parseInt(args[<font color="#ff00ff">1</font>]);
+        <font color="#2e8b57"><b>int</b></font> numProc = Integer.parseInt(args[<font color="#ff00ff">2</font>]);
+        Linker comm = <font color="#a52a2a"><b>new</b></font> Linker(baseName, myId, numProc);
+        Consensus sp = <font color="#a52a2a"><b>new</b></font> Consensus(comm, <font color="#ff00ff">3</font>);
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; numProc; i++)
+            <font color="#a52a2a"><b>if</b></font> (i != myId) (<font color="#a52a2a"><b>new</b></font> ListenerThread(i, sp)).start();
+        sp.propose(myId);
+        System.out.println(<font color="#ff00ff">&quot;The value decided upon is &quot;</font> + sp.decide());
+    }
+}
+</pre>
+</body>
+</html>

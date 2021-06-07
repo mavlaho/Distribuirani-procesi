@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>~/code/dprogs/Connector.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#a020f0">import</font> java.net.*;
+<font color="#a020f0">import</font> java.io.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> Connector {
+    ServerSocket listener;
+    Socket [] link;
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> Connect(String basename, <font color="#288850"><b>int</b></font> myId, <font color="#288850"><b>int</b></font> numProc,
+    BufferedReader[] dataIn,
+    PrintWriter[] dataOut) <font color="#288850"><b>throws</b></font> Exception {
+        Name myNameclient = <font color="#a02828"><b>new</b></font> Name();
+
+        link = <font color="#a02828"><b>new</b></font> Socket[numProc];<font color="#0000f8">/* Get as many sockets as # of processes */</font>
+        <font color="#288850"><b>int</b></font> localport = getLocalPort(myId);<font color="#0000f8">/* create a serverSocket for myself */</font>
+        listener = <font color="#a02828"><b>new</b></font> ServerSocket(localport);
+
+        <font color="#0000f8">/* register in the name server */</font>
+        myNameclient.insertName(basename + myId,
+        (InetAddress.getLocalHost()).getHostName(), localport);
+
+        <font color="#0000f8">/* accept connections from all the smaller processes */</font>
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = <font color="#f800f8">0</font>; i &lt; myId; i++) {
+            Socket s = listener.accept();
+            BufferedReader dIn = <font color="#a02828"><b>new</b></font> BufferedReader(
+            <font color="#a02828"><b>new</b></font> InputStreamReader(s.getInputStream()));
+            String getline = dIn.readLine();
+            StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(getline);
+            <font color="#288850"><b>int</b></font> hisId = Integer.parseInt(st.nextToken());
+            <font color="#288850"><b>int</b></font> destId = Integer.parseInt(st.nextToken());
+            String tag = st.nextToken();
+            <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;hello&quot;</font>)) {
+                link[hisId] = s;
+                dataIn[hisId] = dIn;
+                dataOut[hisId] = <font color="#a02828"><b>new</b></font> PrintWriter(s.getOutputStream());
+            }
+        }
+        <font color="#0000f8">/* contact all the bigger processes */</font>
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i = myId + <font color="#f800f8">1</font>; i &lt; numProc; i++) {
+            PortAddr addr;
+            <font color="#a02828"><b>do</b></font> {
+                addr = myNameclient.searchName(basename + i);
+                Thread.sleep(<font color="#f800f8">100</font>);
+            } <font color="#a02828"><b>while</b></font> (addr.getportnum() == -<font color="#f800f8">1</font>);
+            link[i] = <font color="#a02828"><b>new</b></font> Socket(addr.gethostname(), addr.getportnum());
+            dataOut[i] = <font color="#a02828"><b>new</b></font> PrintWriter(link[i].getOutputStream());
+            dataIn[i] = <font color="#a02828"><b>new</b></font> BufferedReader(<font color="#a02828"><b>new</b></font>
+            InputStreamReader(link[i].getInputStream()));
+            <font color="#0000f8">/* send a hello message to P_i */</font>
+            dataOut[i].println(myId + <font color="#f800f8">&quot; &quot;</font> + i + <font color="#f800f8">&quot; &quot;</font> + <font color="#f800f8">&quot;hello&quot;</font> + <font color="#f800f8">&quot; &quot;</font> + <font color="#f800f8">&quot;null&quot;</font>);
+            dataOut[i].flush();
+        }
+    }
+    <font color="#288850"><b>int</b></font> getLocalPort(<font color="#288850"><b>int</b></font> id) {
+        <font color="#a02828"><b>return</b></font> Symbols.ServerPort + <font color="#f800f8">10</font> + id;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> closeSockets(){
+        <font color="#a02828"><b>try</b></font> {
+            listener.close();
+            <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> i=<font color="#f800f8">0</font>;i&lt;link.length; i++)
+                link[i].close();
+        } <font color="#a02828"><b>catch</b></font> (Exception e) {System.err.println(e);}
+    }
+}
+</pre>
+</body>
+</html>

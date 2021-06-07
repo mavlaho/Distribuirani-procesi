@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>~/code/dprogs/TermToken.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> TermToken <font color="#288850"><b>extends</b></font> Process <font color="#288850"><b>implements</b></font> TermDetector {
+    <font color="#288850"><b>final</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>int</b></font> passive = <font color="#f800f8">0</font>, active = <font color="#f800f8">1</font>, white = <font color="#f800f8">0</font>, black = <font color="#f800f8">1</font>;
+    <font color="#288850"><b>int</b></font> state = passive, color = white;
+    <font color="#288850"><b>int</b></font> c = <font color="#f800f8">0</font>;
+    <font color="#288850"><b>int</b></font> next;
+    <font color="#288850"><b>boolean</b></font> haveToken = <font color="#f800f8">false</font>;
+    <font color="#288850"><b>int</b></font> tokenCount = <font color="#f800f8">0</font>, tokenColor = white;
+    <font color="#288850"><b>public</b></font> TermToken(Linker initComm) {
+        <font color="#288850"><b>super</b></font>(initComm);
+        next = (myId + <font color="#f800f8">1</font>) % N;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> initiate() {
+        <font color="#a02828"><b>if</b></font> (myId==Symbols.coordinator) {
+            <font color="#a02828"><b>if</b></font> (state == passive) sendToken();
+            <font color="#a02828"><b>else</b></font> haveToken = <font color="#f800f8">true</font>;
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+        <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;termToken&quot;</font>)) {
+            haveToken = <font color="#f800f8">true</font>;
+            StringTokenizer st = <font color="#a02828"><b>new</b></font> StringTokenizer(m.getMessage());
+            tokenColor = Integer.parseInt(st.nextToken());
+            tokenCount = Integer.parseInt(st.nextToken());
+            <font color="#a02828"><b>if</b></font> (myId==Symbols.coordinator) {
+                <font color="#a02828"><b>if</b></font> ((c + tokenCount == <font color="#f800f8">0</font>) &amp;&amp; (color == white) &amp;&amp;
+                        (state == passive) &amp;&amp; (tokenColor == white)) {
+                    System.out.println(<font color="#f800f8">&quot;Termination Detected&quot;</font>);
+                    haveToken = <font color="#f800f8">false</font>;
+                }
+            }
+            <font color="#a02828"><b>if</b></font> ((state == passive) &amp;&amp; haveToken) sendToken();
+        } <font color="#a02828"><b>else</b></font> { <font color="#0000f8">// application message</font>
+            state = active;
+            color = black;
+            c = c - <font color="#f800f8">1</font>;
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendAction() {
+        c = c + <font color="#f800f8">1</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> turnPassive() {
+        state = passive;
+        <font color="#a02828"><b>if</b></font> (haveToken) sendToken();
+    }
+    <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> sendToken() {
+        <font color="#a02828"><b>if</b></font> (myId==Symbols.coordinator)
+            sendMsg(next, <font color="#f800f8">&quot;termToken&quot;</font>, white, <font color="#f800f8">0</font>);
+        <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>if</b></font> ((color == black) || (tokenColor == black))
+            sendMsg(next, <font color="#f800f8">&quot;termToken&quot;</font>, black, c + tokenCount);
+        <font color="#a02828"><b>else</b></font>
+            sendMsg(next, <font color="#f800f8">&quot;termToken&quot;</font>, white, c + tokenCount);
+        haveToken = <font color="#f800f8">false</font>;
+        color = white;
+    }
+}
+</pre>
+</body>
+</html>

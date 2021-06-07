@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>~/code/dprogs/IntLinkedList.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.LinkedList;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> IntLinkedList <font color="#288850"><b>extends</b></font> LinkedList {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> add(<font color="#288850"><b>int</b></font> i) {
+        <font color="#288850"><b>super</b></font>.add(<font color="#a02828"><b>new</b></font> Integer(i));
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>boolean</b></font> contains(<font color="#288850"><b>int</b></font> i) {
+        <font color="#a02828"><b>return</b></font> <font color="#288850"><b>super</b></font>.contains(<font color="#a02828"><b>new</b></font> Integer(i));
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> removeHead() {
+        Integer j = (Integer) <font color="#288850"><b>super</b></font>.removeFirst();
+        <font color="#a02828"><b>return</b></font> j.intValue();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>int</b></font> getEntry(<font color="#288850"><b>int</b></font> index) {
+        Integer j = (Integer) <font color="#288850"><b>super</b></font>.get(index);
+        <font color="#a02828"><b>return</b></font> j.intValue();
+    }
+}
+</pre>
+</body>
+</html>

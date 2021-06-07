@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>~/public_html/f03/dist/code/consensus/KingBGA.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> KingBGA <font color="#2e8b57"><b>extends</b></font> Process {
+    <font color="#2e8b57"><b>final</b></font> <font color="#2e8b57"><b>static</b></font> <font color="#2e8b57"><b>int</b></font> defaultValue = <font color="#ff00ff">0</font>;
+    <font color="#2e8b57"><b>int</b></font> f; <font color="#0000ff">// maximum number of faults</font>
+    <font color="#2e8b57"><b>int</b></font> V[]; <font color="#0000ff">// set of values known</font>
+    <font color="#2e8b57"><b>int</b></font> kingValue, myValue;
+    <font color="#2e8b57"><b>public</b></font> KingBGA(Linker initComm, <font color="#2e8b57"><b>int</b></font> f) {
+        <font color="#2e8b57"><b>super</b></font>(initComm);
+        <font color="#2e8b57"><b>this</b></font>.f = f;
+        V = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>int</b></font>[N];
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> propose(<font color="#2e8b57"><b>int</b></font> val) {
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; N; i++) V[i] = defaultValue;
+        V[myId] = val;
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>int</b></font> decide() {
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> k = <font color="#ff00ff">0</font>; k &lt;= f; k++) { <font color="#0000ff">// f+1 rounds</font>
+            broadcastMsg(<font color="#ff00ff">&quot;phase1&quot;</font>, V[myId]);
+            Util.mySleep(Symbols.roundTime);
+            <font color="#2e8b57"><b>synchronized</b></font> (<font color="#2e8b57"><b>this</b></font>) {
+                myValue = getMajority(V);
+                <font color="#a52a2a"><b>if</b></font> (k == myId)
+                    broadcastMsg(<font color="#ff00ff">&quot;king&quot;</font>, myValue);
+            }
+            Util.mySleep(Symbols.roundTime);
+            <font color="#2e8b57"><b>synchronized</b></font> (<font color="#2e8b57"><b>this</b></font>) {
+                <font color="#a52a2a"><b>if</b></font> (numCopies(V, myValue) &gt; N / <font color="#ff00ff">2</font> + f)
+                    V[myId] = myValue;
+                <font color="#a52a2a"><b>else</b></font>
+                    V[myId] = kingValue;
+            }
+        }
+        <font color="#a52a2a"><b>return</b></font> V[myId];
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>synchronized</b></font> <font color="#2e8b57"><b>void</b></font> handleMsg(Msg m, <font color="#2e8b57"><b>int</b></font> src, String tag) {
+        <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;phase1&quot;</font>)) {
+            V[src] = m.getMessageInt();
+        } <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (tag.equals(<font color="#ff00ff">&quot;king&quot;</font>)) {
+            kingValue = m.getMessageInt();
+        }
+    }
+    <font color="#2e8b57"><b>int</b></font> getMajority(<font color="#2e8b57"><b>int</b></font> V[]) {
+        <font color="#a52a2a"><b>if</b></font> (numCopies(V, <font color="#ff00ff">0</font>) &gt; N / <font color="#ff00ff">2</font>)
+            <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">0</font>;
+        <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>if</b></font> (numCopies(V, <font color="#ff00ff">1</font>) &gt; N / <font color="#ff00ff">2</font>)
+            <font color="#a52a2a"><b>return</b></font> <font color="#ff00ff">1</font>;
+        <font color="#a52a2a"><b>else</b></font>
+            <font color="#a52a2a"><b>return</b></font> defaultValue;
+    }
+    <font color="#2e8b57"><b>int</b></font> numCopies(<font color="#2e8b57"><b>int</b></font> V[], <font color="#2e8b57"><b>int</b></font> v) {
+        <font color="#2e8b57"><b>int</b></font> count = <font color="#ff00ff">0</font>;
+        <font color="#a52a2a"><b>for</b></font> (<font color="#2e8b57"><b>int</b></font> i = <font color="#ff00ff">0</font>; i &lt; V.length; i++)
+            <font color="#a52a2a"><b>if</b></font> (V[i] == v) count++;
+        <font color="#a52a2a"><b>return</b></font> count;
+    }
+}
+</pre>
+</body>
+</html>

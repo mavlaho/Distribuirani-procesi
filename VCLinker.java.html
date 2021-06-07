@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>~/public_html/dist/code/clocks/VCLinker.java.html</title>
+<meta name="Generator" content="Vim/6.0">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>class</b></font> VCLinker <font color="#2e8b57"><b>extends</b></font> Linker {
+    <font color="#2e8b57"><b>public</b></font> VectorClock vc;
+    <font color="#2e8b57"><b>int</b></font> receiveTag[] = <font color="#ff00ff">null</font>;
+    <font color="#2e8b57"><b>public</b></font> VCLinker(String basename, <font color="#2e8b57"><b>int</b></font> id, <font color="#2e8b57"><b>int</b></font> N) <font color="#2e8b57"><b>throws</b></font> Exception {
+        <font color="#2e8b57"><b>super</b></font>(basename, id, N);
+        vc = <font color="#a52a2a"><b>new</b></font> VectorClock(N, id);
+        receiveTag = <font color="#a52a2a"><b>new</b></font> <font color="#2e8b57"><b>int</b></font>[N];
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>void</b></font> sendMsg(<font color="#2e8b57"><b>int</b></font> destId, String tag, String msg) {
+        <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, <font color="#ff00ff">&quot;vector&quot;</font>, vc.toString());
+        <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, tag, msg);
+        vc.sendAction();
+    }
+    <font color="#2e8b57"><b>public</b></font> <font color="#2e8b57"><b>void</b></font> simpleSendMsg(<font color="#2e8b57"><b>int</b></font> destId, String tag, String msg) {
+        <font color="#2e8b57"><b>super</b></font>.sendMsg(destId, tag, msg);
+     }
+    <font color="#2e8b57"><b>public</b></font> Msg receiveMsg(<font color="#2e8b57"><b>int</b></font> fromId) <font color="#2e8b57"><b>throws</b></font> java.io.IOException {
+        Msg m1 = <font color="#2e8b57"><b>super</b></font>.receiveMsg(fromId);
+        <font color="#a52a2a"><b>if</b></font> (m1.getTag().equals(<font color="#ff00ff">&quot;vector&quot;</font>)) {
+            Util.readArray(m1.getMessage(), receiveTag);
+            vc.receiveAction(receiveTag);
+            Msg m = <font color="#2e8b57"><b>super</b></font>.receiveMsg(fromId);<font color="#0000ff">//app message</font>
+            <font color="#a52a2a"><b>return</b></font> m;
+        }
+        <font color="#a52a2a"><b>else</b></font> <font color="#a52a2a"><b>return</b></font> m1;
+    }
+}
+</pre>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>~/code/dprogs/TermShortestPath.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> TermShortestPath <font color="#288850"><b>extends</b></font> ShortestPath {
+    TermDetector td = <font color="#f800f8">null</font>;
+    <font color="#288850"><b>public</b></font> TermShortestPath(Linker initComm, <font color="#288850"><b>int</b></font> initCost[],
+                            TermDetector td) {
+        <font color="#288850"><b>super</b></font>(initComm, initCost);
+        <font color="#288850"><b>this</b></font>.td = td;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> initiate() {
+        <font color="#288850"><b>super</b></font>.initiate();
+        td.initiate();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> sendMsg(<font color="#288850"><b>int</b></font> dest, String tag, <font color="#288850"><b>int</b></font> msg) {
+        <font color="#288850"><b>super</b></font>.sendMsg(dest, tag, msg);
+        td.sendAction();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+        td.handleMsg(m, source, tag);
+        <font color="#288850"><b>super</b></font>.handleMsg(m, source, tag);
+        td.turnPassive();
+    }
+}
+</pre>
+</body>
+</html>

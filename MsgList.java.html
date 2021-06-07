@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>~/code/dprogs/MsgList.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> MsgList <font color="#288850"><b>extends</b></font> LinkedList {
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>void</b></font> insert(SeqMessage sm) {
+        <font color="#288850"><b>int</b></font> ts = sm.getSeqNo();
+        ListIterator iter = <font color="#288850"><b>super</b></font>.listIterator(<font color="#f800f8">0</font>);
+        <font color="#a02828"><b>while</b></font> (iter.hasNext()) {
+            <font color="#288850"><b>int</b></font> t = ((SeqMessage) iter.next()).getSeqNo();
+            <font color="#a02828"><b>if</b></font> (ts &lt;= t) <font color="#a02828"><b>break</b></font>;
+        }
+        iter.add(sm); <font color="#0000f8">// error: add before</font>
+    }
+    <font color="#288850"><b>public</b></font> Message removeM(<font color="#288850"><b>int</b></font> seqNo) {
+        SeqMessage sm;
+        ListIterator iter = <font color="#288850"><b>super</b></font>.listIterator(<font color="#f800f8">0</font>);
+        <font color="#a02828"><b>while</b></font> (iter.hasNext()) {
+            sm = (SeqMessage) iter.next();
+            <font color="#a02828"><b>if</b></font> (sm.getSeqNo() == seqNo) {
+                iter.remove();
+                <font color="#a02828"><b>return</b></font> sm.getMessage();
+            }
+        }
+        <font color="#a02828"><b>return</b></font> <font color="#f800f8">null</font>;
+    }
+}
+</pre>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>~/code/dprogs/DistSensor.java.html</title>
+<meta name="Generator" content="Vim/6.1">
+</head>
+<body bgcolor="#ffffff" text="#000000">
+<pre>
+<font color="#a020f0">import</font> java.util.*;
+<font color="#288850"><b>public</b></font> <font color="#288850"><b>class</b></font> DistSensor <font color="#288850"><b>extends</b></font> Process <font color="#288850"><b>implements</b></font> Runnable,Sensor {
+    <font color="#288850"><b>final</b></font> <font color="#288850"><b>static</b></font> <font color="#288850"><b>int</b></font> red = <font color="#f800f8">0</font>, green = <font color="#f800f8">1</font>;
+    <font color="#288850"><b>int</b></font> candidate[], color[],G[];
+    <font color="#288850"><b>boolean</b></font> finished = <font color="#f800f8">false</font>, haveToken = <font color="#f800f8">false</font>;
+    LinkedList q = <font color="#a02828"><b>new</b></font> LinkedList();
+    SensorUser app;
+    <font color="#288850"><b>public</b></font> DistSensor(VCLinker initComm, SensorUser app) {
+        <font color="#288850"><b>super</b></font>(initComm);
+        <font color="#288850"><b>this</b></font>.app = app;
+        candidate = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[N]; color = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[N]; G = <font color="#a02828"><b>new</b></font> <font color="#288850"><b>int</b></font>[N];
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j=<font color="#f800f8">0</font>; j&lt;N; j++)    { color[j] = red; G[j] = <font color="#f800f8">0</font>;}
+        <font color="#a02828"><b>if</b></font> (myId==Symbols.coordinator) haveToken=<font color="#f800f8">true</font>;
+        <font color="#a02828"><b>new</b></font> Thread(<font color="#288850"><b>this</b></font>).start();
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> run(){
+        <font color="#a02828"><b>while</b></font> (!finished) {
+            <font color="#a02828"><b>while</b></font> (!haveToken) myWait();
+            handleToken();
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleToken() {
+        <font color="#a02828"><b>while</b></font> (color[myId] == red) {
+            <font color="#a02828"><b>while</b></font> (q.isEmpty() &amp;&amp; !finished) myWait();
+            <font color="#a02828"><b>if</b></font> (q.isEmpty() &amp;&amp; finished) {
+                app.globalPredicateFalse(myId);
+                <font color="#a02828"><b>return</b></font>;
+            }
+            candidate = (<font color="#288850"><b>int</b></font>[]) q.removeFirst();
+            <font color="#a02828"><b>if</b></font> (candidate[myId] &gt; G[myId]) {
+                G[myId] = candidate[myId]; color[myId] = green;
+            }
+        }
+        <font color="#a02828"><b>for</b></font> (<font color="#288850"><b>int</b></font> j = <font color="#f800f8">0</font>; j &lt; N; j++)
+            <font color="#a02828"><b>if</b></font> ((j != myId) &amp;&amp; (candidate[j] &gt;= G[j])) {
+                G[j] = candidate[j]; color[j] = red;
+            }
+        <font color="#288850"><b>int</b></font> j = Util.searchArray(color, red);
+        <font color="#a02828"><b>if</b></font> (j != -<font color="#f800f8">1</font>) sendToken(j);
+        <font color="#a02828"><b>else</b></font> {
+            app.globalPredicateTrue(G);
+            finished = <font color="#f800f8">true</font>;
+        }
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> handleMsg(Message m, <font color="#288850"><b>int</b></font> source, String tag) {
+        <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;TokenG&quot;</font>)) Util.readArray(m.getMessage(), G);
+        <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;Tokencolor&quot;</font>)) {
+            Util.readArray(m.getMessage(), color);
+            haveToken = <font color="#f800f8">true</font>;
+            notifyAll();
+        } <font color="#a02828"><b>else</b></font> <font color="#a02828"><b>if</b></font> (tag.equals(<font color="#f800f8">&quot;finished&quot;</font>)) finished = <font color="#f800f8">true</font>;
+    }
+    <font color="#288850"><b>void</b></font> sendToken(<font color="#288850"><b>int</b></font> j) {
+       ((VCLinker) comm).simpleSendMsg(j, <font color="#f800f8">&quot;TokenG&quot;</font>, Util.writeArray(G));
+       ((VCLinker) comm).simpleSendMsg(j,<font color="#f800f8">&quot;Tokencolor&quot;</font>,Util.writeArray(color));
+       haveToken = <font color="#f800f8">false</font>;
+    }
+    <font color="#288850"><b>public</b></font> <font color="#288850"><b>synchronized</b></font> <font color="#288850"><b>void</b></font> localPredicateTrue(VectorClock vc) {
+        q.add(vc.v);
+        notifyAll();
+    }
+}
+</pre>
+</body>
+</html>
