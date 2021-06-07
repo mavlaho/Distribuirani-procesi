@@ -106,6 +106,3 @@ Util.class
 Util.java
 VCLinker.java
 VectorClock.java
-Synchronizer.java
-Msg.java
-MsgHandler.java
