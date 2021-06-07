@@ -1,0 +1,2 @@
+# Distribuirani-procesi
+Sinkronizator γ
