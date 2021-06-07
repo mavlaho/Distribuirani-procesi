@@ -1,4 +1,6 @@
+// Kod s predavanja.
 import java.util.*;
+
 public class Msg {
     int srcId, destId;
     String tag;
