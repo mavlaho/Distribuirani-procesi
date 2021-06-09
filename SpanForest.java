@@ -38,8 +38,6 @@ public class SpanForest extends Process{
         // Ostali procesi čekaju da budu pozvani u klaster.
     }
 
-    // Bloka sve dok se ne nađe pripadni klaster,
-    // tj. završi kreiranje klastera, ako se radi o vođi klastera.
     public synchronized void waitForDone() {
 	    while (!done) myWait();
     }
@@ -89,7 +87,22 @@ public class SpanForest extends Process{
             waitForAvailable();
         }
 
-        // TODO: Dovršiti i krenuti stvarati novi klaster.
+
+        // Sada je klaster dovršen i krećem s kreiranjem novog klastera.
+
+        // Ovo znači da je ovo zadnji vrh, tj. sada su svi vrhovi u klasterima.
+        if (myId + 1 == N) {
+            // Javlja svim ostalim vrhovima da je konstrukcija šume gotova.
+            for (int i = 0; i < myId; ++i) {
+                sendMsg(i, "spanForestDone");
+            }
+            done = true;
+            notify();
+        } else {
+            // Ovaj klaster je gotov, sada se idućem vrhu šalje poruka da napravi
+            // novi klaster (ako je on već dio klastera, šalje poruku idućem vrhu).
+            sendMsg(myId+1, "createCluster");
+        }
     }
 
     public synchronized void handleMsg(Msg m, int src, String tag) {
@@ -159,8 +172,35 @@ public class SpanForest extends Process{
                 clustPrefEdge.add(m.getMessageInt());
                 // Javlja vrhu da doda brid kao preferirani brid.
                 sendMsg(src, "prefEdgeAccept", m.getMessageInt());
+            }
+        } else if (tag.equals("prefEdgeAccept")) {
+            // v je susjedni vrh iz klastera m.getMessageInt().
+            Integer v = clustNodeMap.get(m.getMessageInt());
+            prefEdge.add((int) v);
+            // Javlja susjedu da uspostavi prefEdge sa svoje strane.
+            sendMsg(v, "prefEdgeNotice");
+        } else if (tag.equals("prefEdgeNotice")) {
+            prefEdge.add(src);
+        } else if (tag.equals("spanForestDone")) {
+            done = true;
+        } else if (tag.equals("createCluster")) {
+            // Ako nije član klastera.
+            if (clusterLeader == -1) {
+                createTree();
             } else {
-                // TODO.
+                // Prosljeđuje poruku idućem vrhu, tj. javlja svim
+                // vrhovima da je stablo gotovo ako nema idućeg čvora.
+                // Ovo znači da je ovo zadnji vrh, tj. sada su svi vrhovi u klasterima.
+                if (myId + 1 == N) {
+                    // Javlja svim ostalim vrhovima da je konstrukcija šume gotova.
+                    for (int i = 0; i < myId; ++i) {
+                        sendMsg(i, "spanForestDone");
+                        done = true;
+                        notify();
+                    }
+                } else {
+                    sendMsg(myId+1, "createCluster");
+                }
             }
         }
     }
