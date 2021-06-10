@@ -176,9 +176,9 @@ public class SpanForest extends Process{
         } else if (tag.equals("prefEdgeAccept")) {
             // v je susjedni vrh iz klastera m.getMessageInt().
             Integer v = clustNodeMap.get(m.getMessageInt());
-            prefEdge.add((int) v);
+            prefEdge.add(v.intValue());
             // Javlja susjedu da uspostavi prefEdge sa svoje strane.
-            sendMsg(v, "prefEdgeNotice");
+            sendMsg(v.intValue(), "prefEdgeNotice");
         } else if (tag.equals("prefEdgeNotice")) {
             prefEdge.add(src);
         } else if (tag.equals("spanForestDone")) {
