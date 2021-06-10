@@ -72,10 +72,10 @@ public class GammaSynch extends Process implements Synchronizer {
             sendMsg(prefNode.intValue(), "ourClusterSafe", pulse);
         }
 
+        notify();
         // Za alfa fazu algoritma.
         unsafeKids.addAll(forest.children);
         trySendParentClustersSafe();
-        notify();
     }
 
     private void sendChildrenPulse() {
