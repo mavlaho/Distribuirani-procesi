@@ -49,16 +49,26 @@ public class SpanForest extends Process{
 
     // Stvara novo stablo/klaster, s čvorom koji je pozvao ovu metodu
     // kao korijenom.
-    public synchronized void createTree() {
+    public void createTree() {
         parent = myId;
         clusterLeader = myId;
         
         newLayer.add(myId);
-        while (newLayer.size() > (k-1) * clusterSize) {
+        while (newLayer.size() >= (k-1) * clusterSize) {
             // Prva "runda" petlje.
             if (clusterSize == 0) {
+                ++clusterSize;
                 lastLayer.add(myId);
                 newLayer.clear();
+                available(myId);
+                // Čeka numWaiting poruka (svaka od tih poruka poziva notify).
+                // TODO: implementirati LOCK interface.
+                while (numWaiting-- > 0) {
+                    Util.println(((Integer)numWaiting).toString());
+                    myWait();
+                }
+                Util.println("OUT");
+                numWaiting = 0;
             } else { // Iduće "runde" petlje.
                 numWaiting = lastLayer.size();
                 Iterator<Integer> t = lastLayer.iterator();
@@ -72,19 +82,19 @@ public class SpanForest extends Process{
                 lastLayer.addAll(newLayer);
                 clusterSize += lastLayer.size();
                 waitForAvailable();
-            }
 
-            // Konstruiram novi newLayer.
-            newLayer.clear();
-            numWaiting = lastLayer.size();
-            Iterator<Integer> t = lastLayer.iterator();
-            while (t.hasNext()) {
-                Integer node = (Integer) t.next();
-                // Ova poruka znači da se pošalju svi susjedi koji mogu postati
-                // potencijalni članovi klastera.
-                sendMsg(node.intValue(), "available");
+                // Konstruiram novi newLayer.
+                newLayer.clear();
+                numWaiting = lastLayer.size();
+                t = lastLayer.iterator();
+                while (t.hasNext()) {
+                    Integer node = (Integer) t.next();
+                    // Ova poruka znači da se pošalju svi susjedi koji mogu postati
+                    // potencijalni članovi klastera.
+                    sendMsg(node.intValue(), "available");
+                }
+                waitForAvailable();
             }
-            waitForAvailable();
         }
 
 
@@ -105,30 +115,35 @@ public class SpanForest extends Process{
         }
     }
 
-    public synchronized void handleMsg(Msg m, int src, String tag) {
-        if (tag.equals("available")) {
-            for (int i = 0; i < N; i++) 
+    private void available(int src) {
+        for (int i = 0; i < N; i++) 
                 if ((i != myId) && (i != src) && isNeighbor(i)) {
                     ++numWaiting;
                     // Upit pripada li ovaj node nekom klasteru.
                     sendMsg(i, "isInCluster");
                 }
+    }
+
+    public synchronized void handleMsg(Msg m, int src, String tag) {
+        if (tag.equals("available")) {
+            available(src);
         } else if (tag.equals("isInCluster")) {
             sendMsg(src, "isInClusterResponse",  clusterLeader);
+            notifyAll();
         } else if (tag.equals("isInClusterResponse")) {
             // TODO: provjeriti je li se poruka dobro šalje.
             // Ovo u poruci bi trebao biti id čvora koji je vođa klastera.
             if (m.getMessageInt() == -1) {
                 // Ova poruka označava da je src potencijalni novi član klastera.
-                sendMsg(clusterLeader, "potentialMember", src);
+                if (myId != clusterLeader) sendMsg(clusterLeader, "potentialMember", src);
+                else newLayer.add(m.getMessageInt());
             }
 
             // Ako su stigli svi odgovori.
             if (--numWaiting == 0) {
                 // Ova poruka klaster leaderu označava da je primio sve susjede od
                 // ovog vrha koji ne pripadaju ni jednom klasteru.
-                sendMsg(clusterLeader, "allAvailableSent");
-                notify();
+                if (myId != clusterLeader) sendMsg(clusterLeader, "allAvailableSent");
             }
         } else if (tag.equals("potentialMember")) {
             // TODO: provjeriti je li se poruka dobro šalje.
@@ -144,7 +159,7 @@ public class SpanForest extends Process{
                     ++numWaiting;
                     // Upit za ući u klaster (kao dijete ovog čvora).
                     sendMsg(i, "invite");
-                }       
+                }     
         } else if (tag.equals("invite")) {
             if (parent == -1) {
                 parent = src;
@@ -183,6 +198,7 @@ public class SpanForest extends Process{
             prefEdge.add(src);
         } else if (tag.equals("spanForestDone")) {
             done = true;
+            notify();
         } else if (tag.equals("createCluster")) {
             // Ako nije član klastera.
             if (clusterLeader == -1) {
@@ -196,7 +212,7 @@ public class SpanForest extends Process{
                     for (int i = 0; i < myId; ++i) {
                         sendMsg(i, "spanForestDone");
                         done = true;
-                        notify();
+                        notifyAll();
                     }
                 } else {
                     sendMsg(myId+1, "createCluster");
