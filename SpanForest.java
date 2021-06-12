@@ -52,76 +52,103 @@ public class SpanForest extends Process{
     public void createTree() {
         parent = myId;
         clusterLeader = myId;
-        
-        newLayer.add(myId);
-        while (newLayer.size() >= (k-1) * clusterSize) {
-            // Prva "runda" petlje.
+        if (newLayer.size() >= (k-1) * clusterSize) expandCluster();
+        else createNextCluster();
+    }
+
+    private void expandCluster() {
+        if (newLayer.size() >= (k-1) * clusterSize) {
+            // Prva "runda".
             if (clusterSize == 0) {
                 ++clusterSize;
                 lastLayer.add(myId);
                 newLayer.clear();
+
                 available(myId);
-                // Čeka numWaiting poruka (svaka od tih poruka poziva notify).
-                // TODO: implementirati LOCK interface.
-                while (numWaiting-- > 0) {
-                    Util.println(((Integer)numWaiting).toString());
-                    myWait();
-                }
-                Util.println("OUT");
-                numWaiting = 0;
-            } else { // Iduće "runde" petlje.
+            } else { // Iduće "runde".
                 numWaiting = lastLayer.size();
                 Iterator<Integer> t = lastLayer.iterator();
                 while (t.hasNext()) {
                     Integer node = (Integer) t.next();
                     // Ova poruka znači da se daje dopuštenje da invitaju susjede u klaster.
-                    sendMsg(node.intValue(), "startInviting");
+                    if (node != myId) sendMsg(node.intValue(), "startInviting");
+                    else { // Vrh ne može sam sebi poslati poruku.
+                        startInviting(myId);
+                    }
                 }
-
-                lastLayer.clear();
-                lastLayer.addAll(newLayer);
-                clusterSize += lastLayer.size();
-                waitForAvailable();
-
-                // Konstruiram novi newLayer.
-                newLayer.clear();
-                numWaiting = lastLayer.size();
-                t = lastLayer.iterator();
-                while (t.hasNext()) {
-                    Integer node = (Integer) t.next();
-                    // Ova poruka znači da se pošalju svi susjedi koji mogu postati
-                    // potencijalni članovi klastera.
-                    sendMsg(node.intValue(), "available");
-                }
-                waitForAvailable();
             }
-        }
-
-
-        // Sada je klaster dovršen i krećem s kreiranjem novog klastera.
-
-        // Ovo znači da je ovo zadnji vrh, tj. sada su svi vrhovi u klasterima.
-        if (myId + 1 == N) {
-            // Javlja svim ostalim vrhovima da je konstrukcija šume gotova.
-            for (int i = 0; i < myId; ++i) {
-                sendMsg(i, "spanForestDone");
-            }
-            done = true;
-            notify();
         } else {
-            // Ovaj klaster je gotov, sada se idućem vrhu šalje poruka da napravi
-            // novi klaster (ako je on već dio klastera, šalje poruku idućem vrhu).
-            sendMsg(myId+1, "createCluster");
+            // Sada je klaster dovršen i krećem s kreiranjem novog klastera.
+            createNextCluster();
+        }
+    }
+
+    private void expandCluster2() {
+        lastLayer.clear();
+        lastLayer.addAll(newLayer);
+        clusterSize += lastLayer.size();
+
+        // Konstruiram novi newLayer.
+        newLayer.clear();
+        numWaiting = lastLayer.size();
+        var t = lastLayer.iterator();
+        while (t.hasNext()) {
+            Integer node = (Integer) t.next();
+            // Ova poruka znači da se pošalju svi susjedi koji mogu postati
+            // potencijalni članovi klastera.
+            sendMsg(node.intValue(), "available");
         }
     }
 
     private void available(int src) {
         for (int i = 0; i < N; i++) 
-                if ((i != myId) && (i != src) && isNeighbor(i)) {
-                    ++numWaiting;
-                    // Upit pripada li ovaj node nekom klasteru.
-                    sendMsg(i, "isInCluster");
-                }
+            if ((i != myId) && (i != src) && isNeighbor(i)) {
+                ++numWaiting;
+                // Upit pripada li ovaj node nekom klasteru.
+                sendMsg(i, "isInCluster");
+            }
+        
+        // Ako nikome nije bila poslana poruka.
+        if (numWaiting == 0) {
+            if (myId != clusterLeader) {
+                // Ova poruka klaster leaderu označava da je primio sve susjede od
+                // ovog vrha koji ne pripadaju ni jednom klasteru.
+                sendMsg(clusterLeader, "allAvailableSent");
+            } else {
+                // Dobiveni su svi odgovori, nastavlja se klaster.
+                expandCluster();
+            }
+        }
+    }
+
+    private void createNextCluster() {
+        // Prosljeđuje poruku idućem vrhu, tj. javlja svim
+        // vrhovima da je stablo gotovo ako nema idućeg čvora.
+        // Ovo znači da je ovo zadnji vrh, tj. sada su svi vrhovi u klasterima.
+        if (myId + 1 == N) {
+            // Javlja svim ostalim vrhovima da je konstrukcija šume gotova.
+            for (int i = 0; i < myId; ++i) {
+                sendMsg(i, "spanForestDone");
+                done = true;
+                notifyAll();
+            }
+        } else {
+            sendMsg(myId+1, "createCluster");
+        }
+    }
+
+    void startInviting(int src) {
+        for (int i = 0; i < N; i++) 
+            if ((i != myId) && (i != src) && isNeighbor(i)) {
+                ++numWaiting;
+                // Upit za ući u klaster (kao dijete ovog čvora).
+                sendMsg(i, "invite", clusterLeader);
+            }
+
+        if (numWaiting == 0) {
+            if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSent");
+            else expandCluster2();
+        }
     }
 
     public synchronized void handleMsg(Msg m, int src, String tag) {
@@ -129,9 +156,7 @@ public class SpanForest extends Process{
             available(src);
         } else if (tag.equals("isInCluster")) {
             sendMsg(src, "isInClusterResponse",  clusterLeader);
-            notifyAll();
         } else if (tag.equals("isInClusterResponse")) {
-            // TODO: provjeriti je li se poruka dobro šalje.
             // Ovo u poruci bi trebao biti id čvora koji je vođa klastera.
             if (m.getMessageInt() == -1) {
                 // Ova poruka označava da je src potencijalni novi član klastera.
@@ -141,28 +166,29 @@ public class SpanForest extends Process{
 
             // Ako su stigli svi odgovori.
             if (--numWaiting == 0) {
-                // Ova poruka klaster leaderu označava da je primio sve susjede od
-                // ovog vrha koji ne pripadaju ni jednom klasteru.
-                if (myId != clusterLeader) sendMsg(clusterLeader, "allAvailableSent");
+                if (myId != clusterLeader) {
+                    // Ova poruka klaster leaderu označava da je primio sve susjede od
+                    // ovog vrha koji ne pripadaju ni jednom klasteru.
+                    sendMsg(clusterLeader, "allAvailableSent");
+                } else {
+                    // Dobiveni su svi odgovori, nastavlja se klaster.
+                    expandCluster();
+                }
             }
+            
         } else if (tag.equals("potentialMember")) {
-            // TODO: provjeriti je li se poruka dobro šalje.
             newLayer.add(m.getMessageInt());
         } else if (tag.equals("allAvailableSent")) {
             if (--numWaiting == 0) {
-                notify();
+                // Dobiveni su svi odgovori, nastavlja se klaster.
+                expandCluster();
             }
         } else if (tag.equals("startInviting")) {
-            ++numReports;
-            for (int i = 0; i < N; i++) 
-                if ((i != myId) && (i != src) && isNeighbor(i)) {
-                    ++numWaiting;
-                    // Upit za ući u klaster (kao dijete ovog čvora).
-                    sendMsg(i, "invite");
-                }     
+            startInviting(src);    
         } else if (tag.equals("invite")) {
             if (parent == -1) {
                 parent = src;
+                clusterLeader = m.getMessageInt();
                 sendMsg(src, "accept");
             } else
                 sendMsg(src, "reject", clusterLeader);
@@ -179,8 +205,9 @@ public class SpanForest extends Process{
             }
             if (--numWaiting == 0) {
                 // Javlja klaster leaderu da je gotov.
-                sendMsg(clusterLeader, "allAvailableSent");
-                notify();
+                if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSent");
+                else expandCluster2();
+                notifyAll();
             }
         } else if (tag.equals("potentialPreferedEdge")) {
             if (!clustPrefEdge.contains(m.getMessageInt())) {
@@ -198,26 +225,16 @@ public class SpanForest extends Process{
             prefEdge.add(src);
         } else if (tag.equals("spanForestDone")) {
             done = true;
-            notify();
+            notifyAll();
         } else if (tag.equals("createCluster")) {
             // Ako nije član klastera.
             if (clusterLeader == -1) {
                 createTree();
             } else {
-                // Prosljeđuje poruku idućem vrhu, tj. javlja svim
-                // vrhovima da je stablo gotovo ako nema idućeg čvora.
-                // Ovo znači da je ovo zadnji vrh, tj. sada su svi vrhovi u klasterima.
-                if (myId + 1 == N) {
-                    // Javlja svim ostalim vrhovima da je konstrukcija šume gotova.
-                    for (int i = 0; i < myId; ++i) {
-                        sendMsg(i, "spanForestDone");
-                        done = true;
-                        notifyAll();
-                    }
-                } else {
-                    sendMsg(myId+1, "createCluster");
-                }
+                createNextCluster();
             }
+        } else if (tag.equals("allInvitesSent")) {
+            expandCluster2();
         }
     }
 }
