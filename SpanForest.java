@@ -49,22 +49,22 @@ public class SpanForest extends Process{
 
     // Stvara novo stablo/klaster, s čvorom koji je pozvao ovu metodu
     // kao korijenom.
-    public void createTree() {
+    public synchronized void createTree() {
         parent = myId;
         clusterLeader = myId;
-        if (newLayer.size() >= (k-1) * clusterSize) expandCluster();
-        else createNextCluster();
+        newLayer.add(myId);
+        expandCluster();
     }
 
     private void expandCluster() {
-        if (newLayer.size() >= (k-1) * clusterSize) {
+        if (newLayer.size() > (k-1) * clusterSize) {
             // Prva "runda".
             if (clusterSize == 0) {
                 ++clusterSize;
                 lastLayer.add(myId);
                 newLayer.clear();
-
                 available(myId);
+                notifyAll();
             } else { // Iduće "runde".
                 numWaiting = lastLayer.size();
                 Iterator<Integer> t = lastLayer.iterator();
@@ -73,13 +73,25 @@ public class SpanForest extends Process{
                     // Ova poruka znači da se daje dopuštenje da invitaju susjede u klaster.
                     if (node != myId) sendMsg(node.intValue(), "startInviting");
                     else { // Vrh ne može sam sebi poslati poruku.
+                        numWaiting = 0;
                         startInviting(myId);
                     }
                 }
+                notifyAll();
             }
         } else {
-            // Sada je klaster dovršen i krećem s kreiranjem novog klastera.
-            createNextCluster();
+            // Sada idem svoriti preferirane vrhove.
+            numWaiting = lastLayer.size();
+            Iterator<Integer> t = lastLayer.iterator();
+            while (t.hasNext()) {
+                Integer node = (Integer) t.next();
+                // Ova poruka znači da se traži od vrha da traži potencijalne preferirane vrhove.
+                if (node != myId) sendMsg(node.intValue(), "startPrefEdgeCreation");
+                else { // Vrh ne može sam sebi poslati poruku.
+                    numWaiting = 0;
+                    startPrefEdgeCreation(myId);
+                }
+            }
         }
     }
 
@@ -98,6 +110,7 @@ public class SpanForest extends Process{
             // potencijalni članovi klastera.
             sendMsg(node.intValue(), "available");
         }
+        notifyAll();
     }
 
     private void available(int src) {
@@ -114,11 +127,12 @@ public class SpanForest extends Process{
                 // Ova poruka klaster leaderu označava da je primio sve susjede od
                 // ovog vrha koji ne pripadaju ni jednom klasteru.
                 sendMsg(clusterLeader, "allAvailableSent");
+                notify();
             } else {
                 // Dobiveni su svi odgovori, nastavlja se klaster.
                 expandCluster();
             }
-        }
+        } else notifyAll();
     }
 
     private void createNextCluster() {
@@ -134,6 +148,7 @@ public class SpanForest extends Process{
             }
         } else {
             sendMsg(myId+1, "createCluster");
+            notifyAll();
         }
     }
 
@@ -148,7 +163,21 @@ public class SpanForest extends Process{
         if (numWaiting == 0) {
             if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSent");
             else expandCluster2();
-        }
+        } else notifyAll();
+    }
+
+    void startPrefEdgeCreation(int src) {
+        for (int i = 0; i < N; i++) 
+            if ((i != myId) && (i != src) && isNeighbor(i)) {
+                ++numWaiting;
+                // Upit za ući u klaster (kao dijete ovog čvora).
+                sendMsg(i, "invitePrefEdge", clusterLeader);
+            }
+
+        if (numWaiting == 0) {
+            if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSentPrefEdge");
+            else createNextCluster();
+        } else notifyAll();
     }
 
     public synchronized void handleMsg(Msg m, int src, String tag) {
@@ -161,7 +190,7 @@ public class SpanForest extends Process{
             if (m.getMessageInt() == -1) {
                 // Ova poruka označava da je src potencijalni novi član klastera.
                 if (myId != clusterLeader) sendMsg(clusterLeader, "potentialMember", src);
-                else newLayer.add(m.getMessageInt());
+                else newLayer.add(src);
             }
 
             // Ako su stigli svi odgovori.
@@ -195,19 +224,50 @@ public class SpanForest extends Process{
         } else if ((tag.equals("accept")) || (tag.equals("reject"))) {
             if (tag.equals("accept")) {
                 children.add(src);
-            } else if (m.getMessageInt() != clusterLeader && 
-                        !clustNodeMap.containsKey(m.getMessageInt())) {
-                // Spremi src za kasnije, ako vođa klastera dozvoli
-                // da se preferirani brid napravi.
-                clustNodeMap.put(m.getMessageInt(), src);
-                // Javlja vođi klastera da je pronađen potencijalni preferirani brid.
-                sendMsg(clusterLeader, "potentialPreferedEdge", m.getMessageInt());
             }
+
             if (--numWaiting == 0) {
                 // Javlja klaster leaderu da je gotov.
                 if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSent");
                 else expandCluster2();
                 notifyAll();
+            }
+        } else if (tag.equals("spanForestDone")) {
+            done = true;
+            notifyAll();
+        } else if (tag.equals("createCluster")) {
+            // Ako nije član klastera.
+            if (clusterLeader == -1) {
+                createTree();
+            } else {
+                createNextCluster();
+            }
+        } else if (tag.equals("allInvitesSent")) {
+            expandCluster2();
+        } else if (tag.equals("startPrefEdgeCreation")) {
+            startPrefEdgeCreation(src);
+        } else if (tag.equals("invitePrefEdge")) {
+            sendMsg(src, "invitePrefEdgeResponse", clusterLeader);
+        } else if (tag.equals("invitePrefEdgeResponse")) {
+            if (m.getMessageInt() != clusterLeader && m.getMessageInt() != -1 &&
+                        !clustNodeMap.containsKey(m.getMessageInt())) {
+                // Spremi src za kasnije, ako vođa klastera dozvoli
+                // da se preferirani brid napravi.
+                clustNodeMap.put(m.getMessageInt(), src);
+                // Javlja vođi klastera da je pronađen potencijalni preferirani brid.
+                if (myId != clusterLeader) sendMsg(clusterLeader, "potentialPreferedEdge", m.getMessageInt());
+                else {
+                    if (!clustPrefEdge.contains(m.getMessageInt())) {
+                        clustPrefEdge.add(m.getMessageInt());
+                        prefEdge.add(src);
+                        sendMsg(src, "prefEdgeNotice");
+                    }
+                }
+            }
+
+            if (--numWaiting == 0) {
+                if (myId != clusterLeader) sendMsg(clusterLeader, "allInvitesSentPrefEdge");
+                else createNextCluster();
             }
         } else if (tag.equals("potentialPreferedEdge")) {
             if (!clustPrefEdge.contains(m.getMessageInt())) {
@@ -223,18 +283,8 @@ public class SpanForest extends Process{
             sendMsg(v.intValue(), "prefEdgeNotice");
         } else if (tag.equals("prefEdgeNotice")) {
             prefEdge.add(src);
-        } else if (tag.equals("spanForestDone")) {
-            done = true;
-            notifyAll();
-        } else if (tag.equals("createCluster")) {
-            // Ako nije član klastera.
-            if (clusterLeader == -1) {
-                createTree();
-            } else {
-                createNextCluster();
-            }
-        } else if (tag.equals("allInvitesSent")) {
-            expandCluster2();
+        } else if (tag.equals("allInvitesSentPrefEdge")) {
+            if (--numWaiting == 0) createNextCluster();
         }
     }
 }
