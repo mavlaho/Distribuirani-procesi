@@ -243,7 +243,9 @@ public class SpanForest extends Process{
                 createNextCluster();
             }
         } else if (tag.equals("allInvitesSent")) {
-            expandCluster2();
+            if (--numWaiting == 0) {
+                expandCluster2();
+            }
         } else if (tag.equals("startPrefEdgeCreation")) {
             startPrefEdgeCreation(src);
         } else if (tag.equals("invitePrefEdge")) {
